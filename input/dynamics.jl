@@ -59,7 +59,6 @@ function update_V_exit(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64}
 
     # Checks
     @assert min(pr_exit...)>=-game.accuracy
-    @assert min(sum(pr_exit,dims=2)...) == max(sum(pr_exit,dims=2)...) == 1
     @assert max(abs.(V_exit[game.S[:,1:4].==0])...) == min(abs.(V_exit[game.S[:,1:4].==0])...) == 0
     return V_exit, pr_exit
 end
@@ -105,7 +104,6 @@ function update_V_entry(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64
 
     # Checks
     @assert min(pr_entry...)>=-game.accuracy
-    @assert min(sum(pr_entry,dims=2)...) == max(sum(pr_entry,dims=2)...) == 1
     @assert max(abs.(V_entry[game.S[:,1:4].==0])...) == min(abs.(V_entry[game.S[:,1:4].==0])...) == 0
     return V_entry, pr_entry
 end
@@ -153,7 +151,6 @@ function update_V_merger(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float6
 
     # Checks
     @assert min(pr_merger...)>=-game.accuracy
-    @assert min(sum(pr_merger,dims=2)...) == max(sum(pr_merger,dims=2)...) == 1
     @assert max(abs.(V_merger[game.S[:,1:4].==0])...) == min(abs.(V_merger[game.S[:,1:4].==0])...) == 0
     return V_merger, pr_merger
 end

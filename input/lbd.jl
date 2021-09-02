@@ -204,7 +204,7 @@ end
 """Compute demand and profits"""
 function compute_PI(game, P::Matrix{Float64})::Tuple{Matrix{Float64},Matrix{Float64},Matrix{Float64},Array{Float64}}
     U = -[P zeros(game.ms,1)] .* game.sigma             # Consumer utility
-    E = exp.(V * game.outcomes') .* game.active_outcomes# Expontential utility
+    E = exp.(U * game.outcomes') .* game.active_outcomes# Expontential utility
     Q = E ./ (sum(E, dims=2))                           # Product demand
     D = Q * game.outcomes[:,1:4]                        # Firm demand
     PI = D .* (P .+ game.scale)                         # Profits
