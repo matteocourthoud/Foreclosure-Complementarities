@@ -1,0 +1,9 @@
+.idea
+*.m~
+*.json
+backup
+figures
+Notes.md
+Theory.md
+errors.txt
+copyfigures.sh
