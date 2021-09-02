@@ -57,7 +57,10 @@ function update_V_exit(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64}
     # Update value with residual probability
     V_exit += V .* (1 .- sum(pr_exit, dims=2));
 
-    @assert max(abs.(V_exit[game.S[:,1:4].==0])...) == 0
+    # Checks
+    @assert min(pr_exit...)>=-game.accuracy
+    @assert min(sum(pr_exit,dims=2)...) == max(sum(pr_exit,dims=2)...) == 1
+    @assert max(abs.(V_exit[game.S[:,1:4].==0])...) == min(abs.(V_exit[game.S[:,1:4].==0])...) == 0
     return V_exit, pr_exit
 end
 
@@ -100,7 +103,10 @@ function update_V_entry(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64
     # Update value with residual probability
     V_entry += V .* (1 .- sum(pr_entry, dims=2));
 
-    @assert max(abs.(V_entry[game.S[:,1:4].==0])...) == 0
+    # Checks
+    @assert min(pr_entry...)>=-game.accuracy
+    @assert min(sum(pr_entry,dims=2)...) == max(sum(pr_entry,dims=2)...) == 1
+    @assert max(abs.(V_entry[game.S[:,1:4].==0])...) == min(abs.(V_entry[game.S[:,1:4].==0])...) == 0
     return V_entry, pr_entry
 end
 
@@ -145,58 +151,11 @@ function update_V_merger(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float6
     # Add residual value
     V_merger += V .* (1 .- sum(pr_merger, dims=2));
 
-    @assert max(abs.(V_merger[game.S[:,1:4].==0])...) == 0
+    # Checks
+    @assert min(pr_merger...)>=-game.accuracy
+    @assert min(sum(pr_merger,dims=2)...) == max(sum(pr_merger,dims=2)...) == 1
+    @assert max(abs.(V_merger[game.S[:,1:4].==0])...) == min(abs.(V_merger[game.S[:,1:4].==0])...) == 0
     return V_merger, pr_merger
 end
-
-
-"""Update value for bundling"""
-function update_V_bundl(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64},Matrix{Float64}}
-
-    # Init
-    V_bundl = Float64.(zeros(size(V)));
-    pr_bundl = Float64.(zeros(size(game.pr_bundl)));
-
-    # Return if no bundling
-    if game.bundling == false
-        return V, pr_bundl
-    end
-
-    # Init present and future value
-    V1 = V[game.idx_bundl];
-    V_incentives = (length(args)==1) ? args[1] : V
-    V1_incentives = V_incentives[game.idx_bundl];
-
-    # Init policy and cost
-    exp_cost = Float64.(zeros(game.ms,4));
-
-    # Calculate bundling probability and update value for each firm
-    for n=1:4
-
-        # Rows where firms can decide to bundle
-        ownership = game.ownership[game.S[:,5] .+ 1, n]
-        rows = ((ownership .> 0) .* (game.S[:,6] .== 0)) .> 0;
-
-        # Compute Delta: difference in value with and without bundling
-        Delta = Float64.(zeros(game.ms));
-        Delta[rows] = V1_incentives[rows,n] + V1_incentives[rows,game.partner[n]] - V_incentives[rows,n] - V_incentives[rows,game.partner[n]];
-
-        # Compute policy if not provided
-        c = game.cost_bundl;
-        if length(args) < 2
-            pr_bundl[:,n], exp_cost[:,n] = compute_p(Delta, c);
-        else # CHECK but should be correct
-            pr_bundl[:,n] = args[2][:,n]
-            exp_cost[:,n] = (c[1] .+ (c[2] .* pr_bundl[:,n] + c[1] .* (1 .- pr_bundl[:,n])) ./2 ) .* pr_bundl[:,n]
-        end
-    end
-
-    # Update V
-    V_bundl = (V1 .- exp_cost) .* pr_bundl + V .* (1 .- pr_bundl);
-
-    @assert max(abs.(V_bundl[game.S[:,1:4].==0])...) == 0
-    return V_bundl, pr_bundl
-end
-
 
 end

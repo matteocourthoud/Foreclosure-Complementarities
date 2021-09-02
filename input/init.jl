@@ -12,12 +12,13 @@ Base.@kwdef mutable struct model
     smax::Vector{Int8} = Int8[5;1]              # Number of states per side of the market
     alpha::Float64 = 0.7                        # Network effect parameter
     beta::Float64 = 0.95                        # Discount factor
+    # TODO: add gamma
     sigma::Float64 = 7.0                        # Competition parameter
     v0::Float64 = 1                             # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
     cost_entry::Vector{Int8} = [0;10];          # Entry cost
     value_exit::Vector{Int8} = [0;1];           # Exit scrap values
-    cost_merger::Vector{Int8} = [0;10];          # Merger cost
+    cost_merger::Vector{Int8} = [0;10];         # Merger cost
     entry::Bool = true                          # Entry
     exit::Bool = true                           # Exit
     mergers::Bool = (policy != "nomergers")     # Mergers
@@ -153,7 +154,7 @@ function find_states(states::Matrix{Int8}, S::Matrix{Int8})::Matrix{Int64}
     return indexes
 end
 
-"""Compute marginal cost"""
+"""Compute scale parameter"""
 function compute_scale(S::Matrix{Int8}, alpha::Float64, smax::Vector{Int8}, policy::String, v0)::Matrix{Float64}
     scale = (S[:,1:4] .- (S[:,1:4].>0)).^(alpha)
     if (policy == "nolearning")
@@ -227,7 +228,8 @@ function compute_idx_entry(S::Matrix{Int8}, ms::Int64, entry::Bool)::Array{Int64
             idx_entry[row,e,:] = init.find_states(s, S);
         end
     end
-    # CHECK: min(idx_entry...) > 0
+    # CHECK
+    @assert min(idx_entry...) > 0
     return idx_entry
 end
 
@@ -235,7 +237,7 @@ end
    firm move to, for each possible firm entry?"""
 function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8})::Array{Int64,3}
 
-    # Init map. Dimensions: states x firms x exiters
+    # Init map. Dimensions: states x exiters x firms
     idx_exit = Int64.(zeros(ms, 4, 4));
 
     # Loop over exiters
@@ -265,7 +267,8 @@ function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{
             idx_exit[row,e,:] = init.find_states(s, S);
         end
     end
-    # CHECK: min(idx_exit...) > 0
+    # CHECK
+    @assert min(idx_exit...) > 0
     return idx_exit
 end
 
@@ -273,7 +276,7 @@ end
    firm move to, for each possible merger?"""
 function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Vector{Int8}, merger_pairs, policy::String)::Array{Int64,3}
 
-    # Init map. Dimensions: states x firms x merger pairs
+    # Init map. Dimensions: states x merger pairs x firms
     idx_merger = Int64.(zeros(ms, 4, 4));
 
     # Loop over merger pairs
@@ -320,7 +323,8 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
             end
         end
     end
-    # CHECK: min(idx_merger...) > 0
+    # CHECK
+    @assert min(idx_merger...) > 0
     return idx_merger
 end
 

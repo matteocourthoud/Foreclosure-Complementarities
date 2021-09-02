@@ -203,11 +203,11 @@ end
 
 """Compute demand and profits"""
 function compute_PI(game, P::Matrix{Float64})::Tuple{Matrix{Float64},Matrix{Float64},Matrix{Float64},Array{Float64}}
-    V = -[P zeros(game.ms,1)] .* game.sigma
-    E = exp.(V * game.outcomes') .* game.active_outcomes
-    Q = E ./ (sum(E, dims=2))
-    D = Q * game.outcomes[:,1:4]
-    PI = D .* (P .+ game.scale)
+    U = -[P zeros(game.ms,1)] .* game.sigma             # Consumer utility
+    E = exp.(V * game.outcomes') .* game.active_outcomes# Expontential utility
+    Q = E ./ (sum(E, dims=2))                           # Product demand
+    D = Q * game.outcomes[:,1:4]                        # Firm demand
+    PI = D .* (P .+ game.scale)                         # Profits
     bonus = 1 .+ (game.S[:,5]./3)
     CS = log.(sum(E, dims=2) .* bonus) ./ game.sigma
     return Q, D, PI, CS
@@ -237,18 +237,19 @@ function solve_game(game)
         #return game_solved
     end
 
-    # Solve game
+    # Init values
     game.P, game.V = init_P(game)
 
+    # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
     rate = 1
     dist = 1
     iter = 0
     while (dist>100*game.accuracy) && (iter<1000)
-        V5, game.pr_exit = dynamics.update_V_exit(game, game.V);
-        V4, game.pr_entry = dynamics.update_V_entry(game, V5);
-        V3, game.pr_merger = dynamics.update_V_merger(game, V4);
-        V1, game.P, game.Q, game.D, game.PI, game.CS = update_V(game, V3);
+        V4, game.pr_exit = dynamics.update_V_exit(game, game.V);
+        V3, game.pr_entry = dynamics.update_V_entry(game, V4);
+        V2, game.pr_merger = dynamics.update_V_merger(game, V3);
+        V1, game.P, game.Q, game.D, game.PI, game.CS = update_V(game, V2);
         # Compute distance
         rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
         dist = max(abs.(game.V - V1)...);
