@@ -33,6 +33,7 @@ function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
         scale = game.scale[row,:]
         p = P[row,:]
         sym_state = ((sum(s[1:4] .> 0).==2) && (s[5]==1)) || (s[5]==3);
+        sym_state = (s[5]>0);
         if sym_state
             surplus = (scale[1] + scale[3]) + (p[1] + p[3])
             p[[1,3]] = surplus/2 .- scale[[1,3]]
@@ -50,7 +51,7 @@ end
 function demand(p::Vector{Float64}, sigma::Float64, outcomes, out)::Tuple{Matrix{Float64},Vector{Float64}}
     u = - [p; 0] .* sigma       # Utility
     u = u .- max(u...)          # Normalize
-    e = exp.(u' * outcomes)     # Exponential of utility
+    e = exp.(u' * outcomes) .* out    # Exponential of utility
     q = e ./ sum(e)             # Demand of each system (should sum to 1)
     d = outcomes * q'           # Demand of each product (should NOT sum to 1)
     return q, d[1:end-1]

@@ -49,8 +49,9 @@ function update_V_exit(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64}
             pr_exit[:,e] = args[1][:,e]
         end
 
-        # Update value of each other firm
+        # Update value of firms that don't exit
         V1[:,e] = V[:,e];
+        V1[rows,game.partner[e]] = V[rows,game.partner[e]];
         V_exit += V1 .* pr_exit[:,e];
     end
 

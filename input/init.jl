@@ -64,7 +64,7 @@ Base.@kwdef mutable struct model
     marketnames::Vector{String} = compute_marketnames(S)
     idx_up::Array{Int64,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
     idx_entry::Array{Int64,3} = compute_idx_entry(S, ms, entry)
-    idx_exit::Array{Int64,3} = compute_idx_exit(S, ms, exit, rival)
+    idx_exit::Array{Int64,3} = compute_idx_exit(S, ms, exit, rival, ownership)
     idx_merger::Array{Int64,3} = compute_idx_merger(S, ms, mergers, rival, merger_pairs, policy)
 
 end
@@ -235,7 +235,7 @@ end
 
 """Compute exit index: in each state, to which state would each
    firm move to, for each possible firm entry?"""
-function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8})::Array{Int64,3}
+function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8}, ownership)::Array{Int64,3}
 
     # Init map. Dimensions: states x exiters x firms
     idx_exit = Int64.(zeros(ms, 4, 4));
@@ -248,14 +248,22 @@ function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{
             # Init
             s = reshape(S[row,:], (1,5));
             o = s[5];
+            partner = ownership[o+1, e]
 
             # Check if exit is possible
             exit_possible = (min([s[e], s[rival[e]]]...)>0) && exit;
+            if partner>0
+                exit_possible = exit_possible && (o==3)
+            end
 
             # If exit possible
             if exit_possible
                 # Set exiter state equal to zero
                 s[e] = 0;
+                # If firm has partner, they both exit
+                if partner>0
+                    s[partner] = 0;
+                end
 
                 # Change ownership
                 s[5] = s[5] - (e in [1,3]) * (o in [1,3]);
@@ -336,7 +344,7 @@ function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{In
         active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
     active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
-    active_outcomes[:, [3,5,7]] = active_outcomes[:, [3,5,7]] .* (S[:,5] .!= 1)
+    active_outcomes[:, [3,4,5,7]] = active_outcomes[:, [3,4,5,7]] .* (S[:,5] .!= 1)
     active_outcomes[:, 5:end-1] = active_outcomes[:, 5:end-1] .* gamma
     return active_outcomes
 end

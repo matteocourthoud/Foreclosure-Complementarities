@@ -7,6 +7,7 @@ Date: 07/06/2021
 
 include("input/init.jl")
 include("input/lbd.jl")
+include("input/dynamics.jl")
 include("input/predatory.jl")
 include("input/postprocess.jl")
 disp(x) = Base.print_matrix(stdout, Float32.(x))
