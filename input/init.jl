@@ -59,7 +59,7 @@ Base.@kwdef mutable struct model
     pr_exit::Matrix{Float64} = zeros(ms,4)       # Probability of exit
     pr_merger::Matrix{Float64} = zeros(ms,4)     # Probability of merger
     active_firms::BitMatrix = Bool.([S[:,1:4] .> 0 ones(ms, 1)])
-    active_outcomes::Matrix{Bool} = compute_active_outcomes(S, ms, active_firms)
+    active_outcomes::Matrix{Bool} = compute_active_outcomes(S, ms, outcomes)
     markets::Vector{Int64} = compute_markets(S, ms)
     marketnames::Vector{String} = compute_marketnames(S)
     idx_up::Array{Int64,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
@@ -330,11 +330,10 @@ end
 
 
 """Precomputed stuff"""
-function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, active_firms::BitMatrix)::Matrix{Bool}
-    index = [1 2 1 2 1 2 3 4 5; 3 4 4 3 5 5 5 5 5]
-    active_outcomes = Bool.(zeros(ms, 9))
+function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8})::Matrix{Bool}
+    active_outcomes = zeros(ms, size(outcomes,1))
     for i=1:ms
-        active_outcomes[i,:] = Bool.(prod(active_firms[i,:][index], dims=1))
+        active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
     active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
     active_outcomes[:, [3,5,7]] = active_outcomes[:, [3,5,7]] .* (S[:,5] .!= 1)
