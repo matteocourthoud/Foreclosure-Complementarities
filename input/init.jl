@@ -12,7 +12,7 @@ Base.@kwdef mutable struct model
     smax::Vector{Int8} = Int8[5;1]              # Number of states per side of the market
     alpha::Float64 = 0.7                        # Network effect parameter
     beta::Float64 = 0.95                        # Discount factor
-    # TODO: add gamma
+    gamma::Float64 = 1.0                        # Complementarity parameter
     sigma::Float64 = 7.0                        # Competition parameter
     v0::Float64 = 1                             # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
@@ -59,7 +59,7 @@ Base.@kwdef mutable struct model
     pr_exit::Matrix{Float64} = zeros(ms,4)       # Probability of exit
     pr_merger::Matrix{Float64} = zeros(ms,4)     # Probability of merger
     active_firms::BitMatrix = Bool.([S[:,1:4] .> 0 ones(ms, 1)])
-    active_outcomes::Matrix{Bool} = compute_active_outcomes(S, ms, outcomes)
+    active_outcomes::Matrix{Float64} = compute_active_outcomes(S, ms, outcomes, gamma)
     markets::Vector{Int64} = compute_markets(S, ms)
     marketnames::Vector{String} = compute_marketnames(S)
     idx_up::Array{Int64,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
@@ -180,7 +180,7 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes
     for k=1:K
         # Generate next state
         out = outcomes[k,1:4];
-        active_out = active_outcomes[:,k];
+        active_out = active_outcomes[:,k] .> 0;
         up = (Sfirms.<Smax) .* reshape(out, (1,4)) .* active_out;
         S2 = Int8.([Sfirms + up S[:, 5]])
 
@@ -330,13 +330,14 @@ end
 
 
 """Precomputed stuff"""
-function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8})::Matrix{Bool}
+function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64)::Matrix{Float64}
     active_outcomes = zeros(ms, size(outcomes,1))
     for i=1:ms
         active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
     active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
     active_outcomes[:, [3,5,7]] = active_outcomes[:, [3,5,7]] .* (S[:,5] .!= 1)
+    active_outcomes[:, 5:end-1] = active_outcomes[:, 5:end-1] .* gamma
     return active_outcomes
 end
 

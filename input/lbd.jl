@@ -47,7 +47,7 @@ function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
 end
 
 """Compute demand"""
-function demand(p::Vector{Float64}, sigma::Float64, outcomes)::Tuple{Matrix{Float64},Vector{Float64}}
+function demand(p::Vector{Float64}, sigma::Float64, outcomes, out)::Tuple{Matrix{Float64},Vector{Float64}}
     u = - [p; 0] .* sigma       # Utility
     u = u .- max(u...)          # Normalize
     e = exp.(u' * outcomes)     # Exponential of utility
@@ -57,13 +57,13 @@ function demand(p::Vector{Float64}, sigma::Float64, outcomes)::Tuple{Matrix{Floa
 end
 
 """Compute profits for BR iteration"""
-function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, game, scale::Vector{Float64}, outcomes, partner::Vector{Int8}, w)::Float64
+function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, game, scale::Vector{Float64}, outcomes, partner::Vector{Int8}, w, out)::Float64
 
     # Insert price of firm n
     p[n] = x[1]
 
     # Compute demand
-    q, d = demand(p, game.sigma, outcomes)
+    q, d = demand(p, game.sigma, outcomes, out)
 
     # Compute value
     V = (p .+ scale) .* d + sum(w .* q, dims=2)
@@ -83,7 +83,8 @@ function update_p_BR(game, p, row, W)::Vector{Float64}
 
     # Check active firms
     active_n = game.active_firms[row,:]
-    active_out = game.active_outcomes[row,:]
+    active_out = game.active_outcomes[row,:].>0
+    out = game.active_outcomes[row, active_out.>0]'
 
     # Init
     scale = game.scale[row, active_n[1:4]]
@@ -100,7 +101,7 @@ function update_p_BR(game, p, row, W)::Vector{Float64}
     br = copy(p[active_n[1:4]])
     while (dist > game.accuracy) && (iter<100)
         for n=1:length(br)
-            br[n] = optimize((x -> -BR(x, n, br, game, scale, outcomes, partner, w)), [br[n]], LBFGS()).minimizer[1]
+            br[n] = optimize((x -> -BR(x, n, br, game, scale, outcomes, partner, w, out)), [br[n]], LBFGS()).minimizer[1]
         end
         dist = max(abs.(br .- p[active_n[1:4]])...)
         p[active_n[1:4]] = copy(br);
@@ -120,10 +121,10 @@ function update_P_BR(game, W)::Matrix{Float64}
 end
 
 """First order condition"""
-function FOC(p::Vector{Float64}, game, scale::Vector{Float64}, outcomes, partner::Vector{Int8}, w_signed, joint_p::Vector{Int8})::Vector{Float64}
+function FOC(p::Vector{Float64}, game, scale::Vector{Float64}, outcomes, partner::Vector{Int8}, w_signed, joint_p::Vector{Int8}, out)::Vector{Float64}
 
     # Compute demand
-    q, d = demand(p, game.sigma, outcomes)
+    q, d = demand(p, game.sigma, outcomes, out)
 
     # Compute extra: future value
     dd = ((1 .- d) .* (outcomes[1:end-1,:] .> 0) .+ d .* (outcomes[1:end-1,:] .== 0) )
@@ -147,7 +148,8 @@ function update_p_FOC(game, W, row)::Vector{Float64}
 
     # Check active firms
     active_n = game.active_firms[row, :]
-    active_out = game.active_outcomes[row,:]
+    active_out = game.active_outcomes[row,:].>0
+    out = game.active_outcomes[row, active_out.>0]'
 
     # Init
     scale = game.scale[row, active_n[1:4]]
@@ -166,11 +168,11 @@ function update_p_FOC(game, W, row)::Vector{Float64}
     p = game.P[row, :]
 
     # Solve
-    solution = nlsolve((x -> FOC(x, game, scale, outcomes, partner, w_signed, joint_p)), p[active_n[1:4]])
+    solution = nlsolve((x -> FOC(x, game, scale, outcomes, partner, w_signed, joint_p, out)), p[active_n[1:4]])
     p[active_n[1:4]] = solution.zero
 
     # Compute demand
-    q, d = demand(p[active_n[1:4]], game.sigma, outcomes)
+    q, d = demand(p[active_n[1:4]], game.sigma, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
     not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>10)
