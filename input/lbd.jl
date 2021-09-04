@@ -179,7 +179,7 @@ function update_p_FOC(game, W, row)::Vector{Float64}
     # Consider model not solved if not zero, there are nan prices or zero demand
     not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>10)
     if not_solved
-        p = 0 * game.scale[row,:]
+        p = - 0.5 * game.scale[row,:]
         p = update_p_BR(game, p, row, W)
     end
 

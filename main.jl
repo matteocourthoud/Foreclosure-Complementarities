@@ -19,8 +19,8 @@ policies = ["baseline", "nolearning", "nomergers", "datasharing", "limitedmerger
 
 # Generate comparative statics
 for policy in policies
-    for sigma = 1:1:9
-        for alpha = 0.1:0.1:0.9
+    for sigma = 1:1:7
+        for alpha = 0.0:0.1:0.0
                 game = init.model(policy=policy, alpha=alpha, sigma=sigma);
             if contains(game.policy, "nopred")
                 game_solved = predatory.solve_game(game);

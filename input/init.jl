@@ -190,7 +190,7 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes
             S2[:,1:4] = S2[:,1:4] + lag;
         end
 
-        # Fine next state
+        # Find next state
         idx = find_states(S2, S);
 
         # Add state index
@@ -253,7 +253,7 @@ function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{
             # Check if exit is possible
             exit_possible = (min([s[e], s[rival[e]]]...)>0) && exit;
             if partner>0
-                exit_possible = exit_possible && (o==3)
+                exit_possible = exit_possible && (sum(s[1:4].>0)==4)
             end
 
             # If exit possible
@@ -308,16 +308,16 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
                 merger_possible = merger_possible && all(s[merging_firms] .<= s[rival_firms]);
             end
 
-
             # If merger is possible
             if merger_possible
 
-                # If merger pair is 3/4and no own, swap 3-4
+                # If merger pair is 3/4 and no own, swap 3-4
                 if (p in [3,4]) && (o==0) && merger_possible
                     s[1:4] = s[[1,2,4,3]];
                 end
 
                 # Change ownership
+                # TODO: unnecessary condition
                 s[5] = s[5] + (p in [1,3]) * (o in [0,2]);
                 s[5] = s[5] + 2 * (p in [2,4]) * (o in [0,1]);
             end
