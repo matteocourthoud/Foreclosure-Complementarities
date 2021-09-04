@@ -14,7 +14,7 @@ disp(x) = Base.print_matrix(stdout, Float32.(x))
 
 # Params
 alpha = 0.7
-gamma = 0.1
+gamma = 1.0
 sigma = 7.0
 v0 = 1
 

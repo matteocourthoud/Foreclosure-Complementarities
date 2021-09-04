@@ -162,12 +162,14 @@ function get_sumstats(game)::DataFrame
     profits = vec(sum(game.PI, dims=2));
     surplus = vec(game.CS);
     welfare = profits + surplus;
+    mpolyA = vec(sum(game.S[:,1:2].>0, dims=2) .== 1);
+    mpolyB = vec(sum(game.S[:,3:4].>0, dims=2) .== 1);
     mpoly = vec(sum(game.S[:,1:4].>0, dims=2) .== 2);
 
     # Fill in the summary statistics
     states = unique(game.markets)
     beta = game.beta
-    stats = zeros(length(states), 9)
+    stats = zeros(length(states), 11)
     short_run = game.smax[1]
     long_run = 1000
     for (i,s) in enumerate(states)
@@ -179,11 +181,13 @@ function get_sumstats(game)::DataFrame
                         compute_edv(profits, long_run, s, T, beta),
                         compute_edv(surplus, long_run, s, T, beta),
                         compute_edv(welfare, long_run, s, T, beta),
-                        compute_ev(mpoly, long_run, s, T)]
+                        compute_ev(mpoly, long_run, s, T),
+                        compute_ev(mpolyA, long_run, s, T),
+                        compute_ev(mpolyB, long_run, s, T)]
     end
 
     # Convert to dataframe
-    colnames = ["margin", "bcost", "entry", "exit", "merger", "profits", "surplus", "welfare", "mpoly"]
+    colnames = ["margin", "bcost", "entry", "exit", "merger", "profits", "surplus", "welfare", "mpoly", "mpolyA", "mpolyB"]
     sumstats = DataFrame(Float16.(stats), colnames)
     insertcols!(sumstats, 1, :market => game.marketnames)
     insertcols!(sumstats, 1, :sigma => game.sigma)

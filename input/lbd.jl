@@ -20,6 +20,7 @@ end
 function init_P(game)::Tuple{Matrix{Float64},Matrix{Float64}}
     game.P = - 0.5 * game.scale
     V = game.scale
+    V = zeros(size(game.scale))
     W = compute_W(game, V)
     P = update_P_BR(game, W)
     return P, V
@@ -269,7 +270,7 @@ function solve_game(game)
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[3,4,6,7,9,10,11,12]], "\n\n");
+        print("\n\n", sumstats[:,[3,4,8,9,10,11,13,14]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end
