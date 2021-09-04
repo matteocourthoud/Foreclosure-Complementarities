@@ -20,7 +20,7 @@ end
 function init_P(game)::Tuple{Matrix{Float64},Matrix{Float64}}
     game.P = - 0.5 * game.scale
     V = game.scale
-    V = zeros(size(game.scale))
+    #V = zeros(size(game.scale))
     W = compute_W(game, V)
     P = update_P_BR(game, W)
     return P, V

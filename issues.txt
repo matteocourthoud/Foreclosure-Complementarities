@@ -7,3 +7,9 @@ nopredexitbundling_a7s80v10 : 2.355249101526624e-6
 nopredexitbundling_a7s90v10 : 0.0001697258662574086
 nopredexitbundling_a8s90v10 : 0.0004459227720197134
 nopredexitbundling_a9s90v10 : 5.9729650971007686e-5
+limitedmergers_a1s70v10 : 2.1056872308911068e-5
+nopredexitbundling_a7s80v10 : 0.00015159315994139888
+nopredexitbundling_a8s80v10 : 3.894122863812299e-5
+nopredexitbundling_a9s80v10 : 1.6352316393408728e-5
+nopredexitbundling_a3s90v10 : 5.974633344507652e-6
+nopredexitbundling_a9s90v10 : 3.733051926246844e-5
