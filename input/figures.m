@@ -18,7 +18,7 @@ classdef figures
             "datasharing", "limitedmergers",  ...
             "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"];
         statlimits = [3,1,1,1,1,3,3,5,1,1,1]; % Stats min and max
-        difflimits = [3,1,1,1,1,1,1,.5,1,1,1]; % Stats min and max for differences
+        difflimits = [3,1,1,1,1,1,1,.3,1,1,1]; % Stats min and max for differences
         varnames = ["Price - Cost (short run)", "Below Cost Pricing (short run)", ...
             "Entry Probability (short run)", "Exit Probability (short run)", ...
             "Merger Probability (short run)", ...
@@ -27,7 +27,7 @@ classdef figures
         matketnames = ["Monopoly in A&B","B Monopoly in A&B",...
                     "mixed M/Dpoly","B mixed M/Dpoly",...
                     "Duopoly in A&B","B/2 Duopoly in A&B","B Duopoly in A&B"];
-    
+        filename = "a70s100"
     end
     
     % Methods
@@ -85,7 +85,7 @@ classdef figures
             for policy=figures.policies
                 
                 % Import data
-                filename = sprintf('../output/timeseries/%s_sigma5_alpha50', policy);
+                filename = sprintf('../output/timeseries/%s_%s', policy, figures.filename);
                 data = readtable(sprintf("%s.csv", filename));
 
                 % Get colors
@@ -107,7 +107,7 @@ classdef figures
         
 
         % Plot flows
-        function plot_flows(Q, pr_s, ybars_bottom, colors, I, J)            
+        function plot_flows(Q, pr_s1, ybars_bottom, colors, I, J)            
 
             % Loop over rows and columns
             for j=1:J-1
@@ -115,8 +115,8 @@ classdef figures
                 for i=1:I
 
                     % Get corners
-                    top_lefts = (cumsum(Q(i,:,j)) - Q(i,:,j)) * pr_s(i,j)*0.9 + ybars_bottom(i,j);
-                    bottom_lefts = cumsum(Q(i,:,j)) * pr_s(i,j)*0.9 + ybars_bottom(i,j);
+                    top_lefts = (cumsum(Q(i,:,j)) - Q(i,:,j)) * pr_s1(i,j)*0.9 + ybars_bottom(i,j);
+                    bottom_lefts = cumsum(Q(i,:,j)) * pr_s1(i,j)*0.9 + ybars_bottom(i,j);
                     top_rights = bottoms;
                     bottom_rights = top_rights + bottom_lefts - top_lefts;
                     bottoms = bottoms + bottom_lefts - top_lefts;
@@ -155,12 +155,12 @@ classdef figures
 
 
         % Compute vertical coordinates of bars
-        function [ybars_bottom, ybars_top] = get_ybars(pr_s, I, J)
-            ybars_bottom = zeros(size(pr_s));
-            ybars_top = zeros(size(pr_s));
+        function [ybars_bottom, ybars_top] = get_ybars(pr_s1, I, J)
+            ybars_bottom = zeros(size(pr_s1));
+            ybars_top = zeros(size(pr_s1));
             for j=1:J
-                ybars_bottom(:,j) = cumsum(pr_s(:,j)*0.9 + 0.1/(I-1)) - 0.1/(I-1) - pr_s(:,j)*0.9;
-                ybars_top(:,j) = cumsum(pr_s(:,j)*0.9 + 0.1/(I-1)) - 0.1/(I-1);
+                ybars_bottom(:,j) = cumsum(pr_s1(:,j)*0.9 + 0.1/(I-1)) - 0.1/(I-1) - pr_s1(:,j)*0.9;
+                ybars_top(:,j) = cumsum(pr_s1(:,j)*0.9 + 0.1/(I-1)) - 0.1/(I-1);
             end
         end
 
@@ -183,18 +183,18 @@ classdef figures
         end
 
         % Make graph pretty
-        function prettify(title, pr_s, ylabels, xlabels, ymeans, I, J)
+        function prettify(title, pr_s1, ylabels, xlabels, ymeans, I, J)
             % Make graph look pretty
 
             % Y labels
             for i=1:I
-                if pr_s(i,1)>0.05
+                if pr_s1(i,1)>0.05
                     text(1-0.2, ymeans(i,1)-0.02, ylabels(i), 'HorizontalAlignment', 'right','Fontweight', 'Bold', 'Color', [.4 .4 .4])
-                    text(1-0.2, ymeans(i,1)+0.02, sprintf("%.2f",pr_s(i,1)), 'HorizontalAlignment', 'right', 'Color', [.4 .4 .4])
+                    text(1-0.2, ymeans(i,1)+0.02, sprintf("%.2f",pr_s1(i,1)), 'HorizontalAlignment', 'right', 'Color', [.4 .4 .4])
                 end
-                if pr_s(i,end)>0.05
+                if pr_s1(i,end)>0.05
                     text(J+0.2, ymeans(i,end)-0.02, ylabels(i),'Fontweight', 'Bold', 'Color', [.4 .4 .4])
-                    text(J+0.2, ymeans(i,end)+0.02, sprintf("%.2f",pr_s(i,end)), 'Color', [.4 .4 .4])
+                    text(J+0.2, ymeans(i,end)+0.02, sprintf("%.2f",pr_s1(i,end)), 'Color', [.4 .4 .4])
                 end
             end
 
@@ -219,8 +219,8 @@ classdef figures
             I = length(unique(data.s));
             T = unique(data.t);
             J = length(T);
-            pr_s = reshape(data.pr_s, I, J);
-            pr_s = [ones(I,1)/I, pr_s];
+            pr_s1 = reshape(data.pr_s1, I, J);
+            pr_s1 = [ones(I,1)/I, pr_s1];
             Q = zeros(I, I, J);
             for t=1:length(T)
                Q(:,:,t) = table2array(data(data.t==T(t), 4:end));
@@ -234,14 +234,14 @@ classdef figures
             title = "Transition Flows";
             
             % Get vertical bars
-            I = size(pr_s,1);
-            J = size(pr_s,2);
-            [ybars_bottom, ybars_top] = figures.get_ybars(pr_s, I, J);
+            I = size(pr_s1,1);
+            J = size(pr_s1,2);
+            [ybars_bottom, ybars_top] = figures.get_ybars(pr_s1, I, J);
             
             % Get colors
             palette = palettes.("viridis");
             k = 10;
-            colors = interp1(linspace(0,1,size(palette,1)),palette,linspace(0,1,3+(size(pr_s,1)-1)*k));
+            colors = interp1(linspace(0,1,size(palette,1)),palette,linspace(0,1,3+(size(pr_s1,1)-1)*k));
             colors = colors(2:k:end-1,:);
 
             % Plot
@@ -252,14 +252,14 @@ classdef figures
             hold on
 
             % Plot flows
-            figures.plot_flows(Q, pr_s, ybars_bottom, colors, I, J)
+            figures.plot_flows(Q, pr_s1, ybars_bottom, colors, I, J)
 
             % Plot bars
             figures.plot_bars(ybars_bottom, ybars_top, colors, I, J)
 
             % Prettify
             ymeans = (ybars_bottom + ybars_top) / 2;
-            figures.prettify(title, pr_s, ylabels, xlabels, ymeans, I, J)
+            figures.prettify(title, pr_s1, ylabels, xlabels, ymeans, I, J)
             
             % Save and close
             saveas(gca, sprintf('../output/alluvial/game_%s.png', policy));
@@ -276,7 +276,7 @@ classdef figures
             for policy=figures.policies
                 
                 % Import data
-                filename = sprintf('../output/transitions/%s_a5s50v10', policy);
+                filename = sprintf('../output/transitions/%s_%s', policy, figures.filename);
                 data = readtable(sprintf("%s.csv", filename));
 
                 %set(gca, 'OuterPosition', [-0.15,0,1.27,1.1])

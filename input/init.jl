@@ -9,20 +9,21 @@ Base.@kwdef mutable struct model
 
     """Default Properties"""
     policy::String = "baseline"                 # Name of policy
-    smax::Vector{Int8} = Int8[5;1]              # Number of states per side of the market
-    alpha::Float64 = 0.7                        # Network effect parameter
+    smax::Int8 = Int8(5)                        # Number of states per side of the market
+    alpha::Float64 = 0.7                        # Learning parameter
     beta::Float64 = 0.95                        # Discount factor
+    c::Float64 = 1.0                            # Marginal cost
     gamma::Float64 = 1.0                        # Complementarity parameter
     sigma::Float64 = 7.0                        # Competition parameter
-    v0::Float64 = 1                             # Value of data
+    p0::Float64 = 2.0                           # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
     cost_entry::Vector{Int8} = [0;10];          # Entry cost
-    value_exit::Vector{Int8} = [0;1];           # Exit scrap values
+    value_exit::Vector{Int8} = [0;2];           # Exit scrap values
     cost_merger::Vector{Int8} = [0;10];         # Merger cost
     entry::Bool = true                          # Entry
     exit::Bool = true                           # Exit
     mergers::Bool = (policy != "nomergers")     # Mergers
-    filename::String = string(policy, "_a", Int64(floor(alpha*10)), "s", Int64(floor(sigma*10)), "v", Int64(floor(v0*10)))
+    filename::String = string(policy, "_a", Int64(floor(alpha*100)), "s", Int64(floor(sigma*10)))
     verbose::Bool = true
 
     """Precomputed stuff to speed up computation"""
@@ -48,7 +49,7 @@ Base.@kwdef mutable struct model
     """Derived Properties"""
     S::Matrix{Int8} = get_state_space(smax, policy) # State space
     ms::Int64 = size(S,1)                       # Dimension of the state space
-    scale::Matrix{Float64} = compute_scale(S, alpha, smax, policy, v0)
+    mc::Matrix{Float64} = compute_mc(S, alpha, c, smax, policy)
     D::Matrix{Float64} = zeros(ms,4)            # Demand (per firm)
     Q::Matrix{Float64} = zeros(ms,size(outcomes,1))  # Demand (per system)
     P::Matrix{Float64} = zeros(ms,4)            # Prices
@@ -73,19 +74,19 @@ end
 StructTypes.StructType(::Type{model}) = StructTypes.Mutable()
 
 """Get actions of the platform: order of firms"""
-function get_state_space(smax::Vector{Int8}, policy::String)::Matrix{Int8}
-    i1max = (policy == "nolearning") ? 1 : smax[1]
+function get_state_space(smax::Int8, policy::String)::Matrix{Int8}
     S = Int8.(zeros(0,5))
-    for o=[0,1,3]
+    i1max = (policy == "nolearning") ? 1 : smax
+    O = (policy == "nomergers") ? [0] : [0,1,3]
+    for o=O
         for i1=1:i1max
-            for i3=1:smax[2]
-                i2max = i1 * (o!=1) + i1max * (o==1)
-                for i2=(o==3):i2max
-                    i4max = i1 * (o!=1) + smax[2] * (o==1)
-                    for i4=(o==3):i3
-                        s = reshape([i1, i2, i3, i4, o], (1,5))
-                        S = [S; s]
-                    end
+            i3=1
+            i2max = i1 * (o!=1) + i1max * (o==1)
+            for i2=(o==3):i2max
+                i4max = i1 * (o!=1) + (o==1)
+                for i4=(o==3):i3
+                    s = reshape([i1, i2, i3, i4, o], (1,5))
+                    S = [S; s]
                 end
             end
         end
@@ -154,19 +155,18 @@ function find_states(states::Matrix{Int8}, S::Matrix{Int8})::Matrix{Int64}
     return indexes
 end
 
-"""Compute scale parameter"""
-function compute_scale(S::Matrix{Int8}, alpha::Float64, smax::Vector{Int8}, policy::String, v0)::Matrix{Float64}
-    scale = (S[:,1:4] .- (S[:,1:4].>0)).^(alpha)
+"""Compute marginal cost"""
+function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Int8, policy::String)::Matrix{Float64}
+    mc = c .* S[:,1:4].^log2(alpha);
     if (policy == "nolearning")
-        scale[:,1:2] = ((S[:,1:2].>0).*(smax[1]-1)).^(alpha)
+        mc[:,1:2] =  c .* (S[:,1:2] .* smax).^log2(alpha);
     end
-    scale[:,3:4] .= v0
-    scale[S[:,1:4].==0] .= 0
-    return scale
+    mc[S[:,1:4].==0] .= 0
+    return mc
 end
 
 """Compute index when making a sale"""
-function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes::Matrix{Int8}, active_outcomes, policy::String)::Array{Int64, 3}
+function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Int8, outcomes::Matrix{Int8}, active_outcomes, policy::String)::Array{Int64, 3}
 
     # Init I_up: state x product x firm
     K = size(outcomes,1)
@@ -174,7 +174,7 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes
 
     # Init maximum achievable state
     Sfirms = S[:,1:4];
-    Smax = (policy == "nolearning") ? [1 1 smax[2] smax[2]] : [smax[1] smax[1] smax[2] smax[2]]
+    Smax = (policy == "nolearning") ? [1 1 1 1] : [smax smax 1 1]
 
     # Loop over outcomes
     for k=1:K

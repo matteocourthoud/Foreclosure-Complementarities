@@ -3,7 +3,7 @@
 module predatory
 
 include("init.jl")
-include("lbd.jl")
+include("solve_lbd.jl")
 include("dynamics.jl")
 include("postprocess.jl")
 
@@ -45,7 +45,7 @@ function solve_game(game)
 
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
-    game.P, game.V = lbd.init_P(game)
+    game.P, game.V = solve_lbd.init_P(game)
 
     # Extra init
     V_noincentives = game.V
@@ -88,11 +88,11 @@ function solve_game(game)
 
         # Pricing: use different incentive value for non-predatory pricing
         if occursin(r"nopredexitpricing|nopredentrypricing", game.policy)
-            V1, game.P, game.Q, game.D, game.PI, game.CS = lbd.update_V(game, V3, V_noincentives);
+            V1, game.P, game.Q, game.D, game.PI, game.CS = solve_lbd.update_V(game, V3, V_noincentives);
         else
-            V1, game.P, game.Q, game.D, game.PI, game.CS = lbd.update_V(game, V3);
+            V1, game.P, game.Q, game.D, game.PI, game.CS = solve_lbd.update_V(game, V3);
         end
-        V_noincentives, _, _, _, _, _ = lbd.update_V(game, V_noincentives, V_noincentives, game.P);
+        V_noincentives, _, _, _, _, _ = solve_lbd.update_V(game, V_noincentives, V_noincentives, game.P);
 
         # Compute distance
         rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
@@ -116,7 +116,7 @@ function solve_game(game)
     end
 
     # Export game
-    lbd.export_game(game)
+    solve_lbd.export_game(game)
 
     # If there were issues, save it
     if (dist>100*game.accuracy) || (min(sum(game.D, dims=2)...)<0.01)

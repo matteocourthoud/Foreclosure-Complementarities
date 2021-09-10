@@ -33,7 +33,7 @@ function update_V_exit(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64}
         # Correct Delta: take into account effect of own exit on partner
         rows = (game.ownership[game.S[:,5] .+ 1, e] .> 0)
         Delta_partner = V[rows,game.partner[e]] - V1[rows,game.partner[e]];
-        Delta[rows] += Delta_partner;
+        Delta[rows] = (Delta[rows] + Delta_partner)/2; # TODO: double exit = double cost
 
         # Compute policy if not provided
         if length(args) == 0

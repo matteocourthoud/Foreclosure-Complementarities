@@ -85,9 +85,10 @@ function compute_timelines(game)
     df = DataFrame(zeros(0,6), colnames)
 
     # Add competitive and collusive state
-    smax = contains(game.policy, "nolearning") ? [1, game.smax[2]] : game.smax
-    collusive_s = Int8.([smax[1] 0 smax[2] 0 1])
-    competitive_s = Int8.([smax[1] smax[1] smax[2] smax[2] 0])
+    smax = contains(game.policy, "nolearning") ? 1 : game.smax
+    omax = contains(game.policy, "nomergers") ? 0 : 1
+    collusive_s = Int8.([smax 0 1 0 omax])
+    competitive_s = Int8.([smax smax 1 1 omax])
     for s in [collusive_s, competitive_s]
         s_index = init.find_states(s, game.S)[1]
         append!(df, DataFrame([s_index 0 reshape(V[s_index,:], (1,4))], colnames))
@@ -170,7 +171,7 @@ function get_sumstats(game)::DataFrame
     states = unique(game.markets)
     beta = game.beta
     stats = zeros(length(states), 11)
-    short_run = game.smax[1]
+    short_run = game.smax
     long_run = 1000
     for (i,s) in enumerate(states)
         stats[i,:] = [compute_edv(margin, short_run, s, T, beta),
