@@ -1,7 +1,6 @@
 *.idea
 *.json
 *.csv
-*.png
 *.m~
 backup
 figures
