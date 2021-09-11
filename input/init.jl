@@ -13,7 +13,7 @@ Base.@kwdef mutable struct model
     alpha::Float64 = 0.9                        # Learning parameter
     beta::Float64 = 0.95                        # Discount factor
     c::Float64 = 1.0                            # Marginal cost
-    gamma::Float64 = 0.0                        # Complementarity parameter
+    gamma::Float64 = 1.0                        # Complementarity parameter
     sigma::Float64 = 9.0                        # Competition parameter
     p0::Float64 = 1.5                           # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
@@ -23,7 +23,7 @@ Base.@kwdef mutable struct model
     entry::Bool = true                          # Entry
     exit::Bool = true                           # Exit
     mergers::Bool = (policy != "nomergers")     # Mergers
-    filename::String = string(policy, "_a", Int64(floor(alpha*100)), "s", Int64(floor(sigma*10)))
+    filename::String = string(policy, "_a", Int64(floor(alpha*100)), "g", Int64(floor(gamma*100)), "s", Int64(floor(sigma*10)))
     verbose::Bool = true
 
     """Precomputed stuff to speed up computation"""
@@ -41,15 +41,15 @@ Base.@kwdef mutable struct model
                                   0 0 0 1 1
                                   0 0 0 0 2]    # Sale outcomes
 
-    ownership::Matrix{Int8} = [0 0 0 0
-                               3 0 1 0
-                               0 4 0 2
-                               3 4 1 2]         # Ownership matrix
+    ownership::Matrix{Int8} = Int8[0 0 0 0
+                                   3 0 1 0
+                                   0 4 0 2
+                                   3 4 1 2]     # Ownership matrix
 
     """Derived Properties"""
     S::Matrix{Int8} = get_state_space(smax, policy) # State space
     ms::Int64 = size(S,1)                       # Dimension of the state space
-    mc::Matrix{Float64} = compute_mc(S, alpha, c, smax, policy)
+    mc::Matrix{Float64} = compute_mc(S, alpha, c, smax, policy) # Marginal cost
     P::Matrix{Float64} = 2 .* mc                # Prices
     V::Matrix{Float64} = zeros(ms,4)            # Value function
     D::Matrix{Float64} = zeros(ms,4)            # Demand (per firm)
@@ -166,7 +166,7 @@ function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Int8, pol
 end
 
 """Compute index when making a sale"""
-function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Int8, outcomes::Matrix{Int8}, active_outcomes, policy::String)::Array{Int64, 3}
+function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Int8, outcomes::Matrix{Int8}, active_outcomes::Matrix{Float64}, policy::String)::Array{Int64, 3}
 
     # Init I_up: state x product x firm
     K = size(outcomes,1)
@@ -235,7 +235,7 @@ end
 
 """Compute exit index: in each state, to which state would each
    firm move to, for each possible firm entry?"""
-function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8}, ownership)::Array{Int64,3}
+function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8}, ownership::Matrix{Int8})::Array{Int64,3}
 
     # Init map. Dimensions: states x exiters x firms
     idx_exit = Int64.(zeros(ms, 4, 4));
@@ -251,6 +251,8 @@ function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{
             partner = ownership[o+1, e]
 
             # Check if exit is possible
+            # - both firm and its rival are active
+            # - if firm has partner, there must be 4 firms
             exit_possible = (min([s[e], s[rival[e]]]...)>0) && exit;
             if partner>0
                 exit_possible = exit_possible && (sum(s[1:4].>0)==4)
@@ -282,7 +284,7 @@ end
 
 """Compute merger index: in each state, to which state would each
    firm move to, for each possible merger?"""
-function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Vector{Int8}, merger_pairs, policy::String)::Array{Int64,3}
+function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Vector{Int8}, merger_pairs::Matrix{Int8}, policy::String)::Array{Int64,3}
 
     # Init map. Dimensions: states x merger pairs x firms
     idx_merger = Int64.(zeros(ms, 4, 4));
@@ -297,6 +299,8 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
             o = s[5];
 
             # Check if merger possible
+            # - all merging parties active
+            # - either no ownership or ownership and 2nd pair (2-4)
             merging_firms = merger_pairs[p,:]
             merger_possible = min(s[merging_firms]...)>0;
             merger_possible = merger_possible && ((o==0) || ((o==1) && (p==2)));
@@ -337,14 +341,18 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
 end
 
 
-"""Precomputed stuff"""
+"""Compute which outcomes are active in each state"""
 function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64)::Matrix{Float64}
     active_outcomes = zeros(ms, size(outcomes,1))
+    # Both firms must be active
     for i=1:ms
         active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
+    # With double ownership, only 1,2,9 are active
     active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
+    # With single ownership only 1,2,6,8,9 are active
     active_outcomes[:, [3,4,5,7]] = active_outcomes[:, [3,4,5,7]] .* (S[:,5] .!= 1)
+    # Partial complementarity
     active_outcomes[:, 5:end-1] = active_outcomes[:, 5:end-1] .* gamma
     return active_outcomes
 end

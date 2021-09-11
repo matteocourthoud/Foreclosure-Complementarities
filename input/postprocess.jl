@@ -192,6 +192,10 @@ function get_sumstats(game)::DataFrame
     sumstats = DataFrame(Float16.(stats), colnames)
     insertcols!(sumstats, 1, :market => game.marketnames)
     insertcols!(sumstats, 1, :sigma => game.sigma)
+    insertcols!(sumstats, 1, :p0 => game.p0)
+    insertcols!(sumstats, 1, :gamma => game.gamma)
+    insertcols!(sumstats, 1, :c => game.c)
+    insertcols!(sumstats, 1, :beta => game.beta)
     insertcols!(sumstats, 1, :alpha => game.alpha)
     return sumstats
 end

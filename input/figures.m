@@ -27,7 +27,11 @@ classdef figures
         matketnames = ["Monopoly in A&B","B Monopoly in A&B",...
                     "mixed M/Dpoly","B mixed M/Dpoly",...
                     "Duopoly in A&B","B/2 Duopoly in A&B","B Duopoly in A&B"];
-        filename = "a70s100"
+        filename = "a70g50s100";
+        beta = 0.95;
+        c = 1;
+        gamma = 0;
+        p0 = 1.5;
     end
     
     % Methods
@@ -267,8 +271,6 @@ classdef figures
 
         end
         
-        
-        
         % Alluvial graph
         function make_all_alluvialplots()
             
@@ -283,8 +285,26 @@ classdef figures
                 figures.plot_alluvial(data, policy);
             end
         end
-                
+               
         
+        
+        
+        
+        % Get compstats
+        function compstats = get_compstats(data, label)
+            sigmas = sort(unique(data.sigma));
+            alphas = sort(unique(data.alpha));
+            compstats = zeros(length(sigmas), length(alphas));
+            for i=1:length(sigmas)
+                for j=1:length(alphas)
+                    row = (data.sigma==sigmas(i)) .* (data.alpha==alphas(j)) .* ...
+                          (data.beta==figures.beta) .* (data.c==figures.c) .* ...
+                          (data.gamma==figures.gamma) .* (data.p0==figures.p0) .* ...
+                          (data.market==40);
+                    compstats(i,j) = table2array(data(logical(row), label));
+                end
+            end
+        end
         
         % Compare policies
         function compstats = compare_games(games, game0, labels, folder)
@@ -336,26 +356,13 @@ classdef figures
             
         end
         
-        
-        % Get compstats
-        function compstats = get_compstats(data, label)
-            sigmas = sort(unique(data.sigma));
-            alphas = sort(unique(data.alpha));
-            compstats = zeros(length(sigmas), length(alphas));
-            for i=1:length(sigmas)
-                for j=1:length(alphas)
-                    row = (data.sigma==sigmas(i)) .* (data.alpha==alphas(j)) .* (data.market==40);
-                    compstats(i,j) = table2array(data(logical(row), label));
-                end
-            end
-        end
-        
-
         % Plot comparative statics
         function plot_compstats()
             
             % Loop over policies
             for policy=figures.policies
+                disp(policy);
+                pause(2);
                 
                 % Import data
                 data = readtable(sprintf("../output/sumstats/%s.csv", policy));
@@ -363,7 +370,7 @@ classdef figures
                 v2 = unique(data.alpha);
 
                 % Labels 
-                labels = data.Properties.VariableNames(4:end);
+                labels = data.Properties.VariableNames(8:end);
 
                 % Build subfigures
                 for l=1:length(labels)
@@ -389,6 +396,8 @@ classdef figures
             
             % Loop over policies
             for policy=figures.policies(2:end)
+                disp(policy);
+                pause(2);
                 
                 % Import data
                 data = readtable(sprintf("../output/sumstats/%s.csv", policy));
@@ -397,7 +406,7 @@ classdef figures
                 baseline_data = readtable("../output/sumstats/baseline.csv");
 
                 % Labels 
-                labels = data.Properties.VariableNames(4:end);
+                labels = data.Properties.VariableNames(8:end);
 
                 % Build subfigures
                 for l=1:length(labels)

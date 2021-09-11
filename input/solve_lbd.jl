@@ -37,54 +37,57 @@ function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
     return P
 end
 
-"""Compute demand"""
-function demand(p::Vector{Float64}, sigma::Float64, p0, outcomes, out)::Tuple{Matrix{Float64},Vector{Float64}}
-    u = - [p; p0] .* sigma       # Utility
-    u = u .- max(u...)          # Normalize
-    e = exp.(u' * outcomes) .* out    # Exponential of utility
-    q = e ./ sum(e)             # Demand of each system (should sum to 1)
-    d = outcomes * q'           # Demand of each product (should NOT sum to 1)
-    return q, d[1:end-1]
-end
-
-"""Compute profits for BR iteration"""
-function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, game, mc::Vector{Float64}, outcomes, partner::Vector{Int8}, w, out)::Float64
-
-    # Insert price of firm n
-    p[n] = x[1]
-
-    # Compute demand
-    q, d = demand(p, game.sigma, game.p0, outcomes, out)
-
-    # Compute value
-    V = (p .- mc) .* d + sum(w .* q, dims=2)
-
-    # Compute value of firm n
-    Vn = V[n]
-
-    # Correct for ownership
-    if partner[n] > 0
-        Vn += V[partner[n]]
-    end
-    return Vn
-end
-
-"""Compute price by best reply itearation"""
-function update_p_BR(game, p, row, W)::Vector{Float64}
+"""Precompute stuff"""
+function precompute(game, row::Int64, W::Array{Float64,3})
 
     # Check active firms
-    active_n = game.active_firms[row,:]
+    active_n = game.active_firms[row, :]
     active_out = game.active_outcomes[row,:].>0
     out = game.active_outcomes[row, active_out.>0]'
 
-    # Init
+    # Marginal cost and partner
     mc = game.mc[row, active_n[1:4]]
     partner = game.ownership[game.S[row,5]+1, active_n[1:4]]
     if (partner[1]>0) & (game.S[row, 2]==0)
         partner[1] -= 1
     end
+
+    # Outcomes and value
     outcomes = game.outcomes[active_out, active_n]'
     w = W[row, active_out, active_n[1:4]]'
+    sign = (outcomes[1:end-1,:] .> 0) .- (outcomes[1:end-1,:] .== 0)
+    w .+= (partner.>0) ? W[row, active_out, game.partner[active_n[1:4]]]' : 0
+    w_signed = Float64.(sign .* w)
+    joint_p = Int8.([1,2,1,2][active_n[1:4]])
+
+    return active_n, out, mc, outcomes, partner, w, w_signed, joint_p
+
+end
+
+"""Compute demand"""
+function demand(p::Vector{Float64}, sigma::Float64, p0::Float64, outcomes::Matrix{Int8}, out::Matrix{Float64})::Tuple{Matrix{Float64},Vector{Float64}}
+    u = - [p; p0] .* sigma          # Utility
+    u = u .- max(u...)              # Normalize
+    e = exp.(u' * outcomes) .* out  # Exponential of utility * outcomes
+    q = e ./ sum(e)                 # Demand of each system (should sum to 1)
+    d = outcomes * q'               # Demand of each product (should NOT sum to 1)
+    return q, d[1:end-1]
+end
+
+"""Compute profits for BR iteration"""
+function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes::Matrix{Int8}, partner::Vector{Int8}, w::Array{Float64,3}, out::Matrix{Float64})::Float64
+    p[n] = x[1]                                         # Insert price of firm n
+    q, d = demand(p, sigma, p0, outcomes, out)# Compute demand
+    V = (p .- mc) .* d + sum(w .* q, dims=2)            # Compute value
+    V[n] += (partner[n] > 0) ? V[partner[n]] : 0        # Correct for ownership
+    return V[n]
+end
+
+"""Compute price by best reply itearation"""
+function update_p_BR(game, p::Vector{Float64}, row::Int64, W::Array{Float64,3})::Vector{Float64}
+
+    # Precompute things
+    active_n, out, mc, outcomes, partner, w, w_signed, joint_p = precompute(game, row, W)
 
     # Iterate best reply
     dist = 1
@@ -92,7 +95,7 @@ function update_p_BR(game, p, row, W)::Vector{Float64}
     br = copy(p[active_n[1:4]])
     while (dist > game.accuracy) && (iter<100)
         for n=1:length(br)
-            br[n] = optimize((x -> -BR(x, n, br, game, mc, outcomes, partner, w, out)), [br[n]], LBFGS()).minimizer[1]
+            br[n] = optimize((x -> -BR(x, n, br, game.sigma, game.p0, mc, outcomes, partner, w, out)), [br[n]], LBFGS()).minimizer[1]
         end
         dist = max(abs.(br .- p[active_n[1:4]])...)
         p[active_n[1:4]] = copy(br);
@@ -102,7 +105,7 @@ function update_p_BR(game, p, row, W)::Vector{Float64}
 end
 
 """Update prices in all states"""
-function update_P_BR(game, W)::Matrix{Float64}
+function update_P_BR(game, W::Array{Float64,3})::Matrix{Float64}
     P = zeros(size(game.P))
     for row=1:size(game.S,1)
         p = copy(game.P[row, :])
@@ -112,10 +115,10 @@ function update_P_BR(game, W)::Matrix{Float64}
 end
 
 """First order condition"""
-function FOC(p::Vector{Float64}, game, mc::Vector{Float64}, outcomes, partner::Vector{Int8}, w_signed, joint_p::Vector{Int8}, out)::Vector{Float64}
+function FOC(p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes::Matrix{Int8}, partner::Vector{Int8}, w_signed::Array{Float64,3}, joint_p::Vector{Int8}, out::Matrix{Float64})::Vector{Float64}
 
     # Compute demand
-    q, d = demand(p, game.sigma, game.p0, outcomes, out)
+    q, d = demand(p, sigma, p0, outcomes, out)
 
     # Compute extra: future value
     dd = ((1 .- d) .* (outcomes[1:end-1,:] .> 0) .+ d .* (outcomes[1:end-1,:] .== 0) )
@@ -123,49 +126,35 @@ function FOC(p::Vector{Float64}, game, mc::Vector{Float64}, outcomes, partner::V
 
     # Compute extra: ownership
     EO = zeros(length(p))
-    for (n, n_) in enumerate(partner)
-        if n_>0
-            EO[n] = (q[joint_p[n]] - d[n]*d[n_]) * (p[n_] .- mc[n_])
+    for (n, ptn) in enumerate(partner)
+        if p_n>0
+            EO[n] = (q[joint_p[n]] - d[n]*d[ptn]) * (p[ptn] .- mc[ptn])
         end
     end
 
     # Compute zero
-    z = d .* (1 .- d) .* (p .- mc) .+ EV .+ EO .- d ./ game.sigma
+    z = d .* (1 .- d) .* (p .- mc) .+ EV .+ EO .- d ./ sigma
     return z
 end
 
 """Update p by numerically solving first order condition"""
-function update_p_FOC(game, W, row)::Vector{Float64}
+function update_p_FOC(game, W::Array{Float64,3}, row::Int64)::Vector{Float64}
 
-    # Check active firms
-    active_n = game.active_firms[row, :]
-    active_out = game.active_outcomes[row,:].>0
-    out = game.active_outcomes[row, active_out.>0]'
-
-    # Init
-    mc = game.mc[row, active_n[1:4]]
-    partner = game.ownership[game.S[row,5]+1, active_n[1:4]]
-    if (partner[1]>0) & (game.S[row, 2]==0)
-        partner[1] -= 1
-    end
-    outcomes = game.outcomes[active_out, active_n]'
-    w = W[row, active_out, active_n[1:4]]'
-    sign = (outcomes[1:end-1,:] .> 0) .- (outcomes[1:end-1,:] .== 0)
-    w += (W[row, active_out, game.partner[active_n[1:4]]]' .* (partner.>0))
-    w_signed = Float64.(sign .* w)
-    joint_p = Int8.([1,2,1,2][active_n[1:4]])
+    # Precompute things
+    active_n, out, mc, outcomes, partner, w, w_signed, joint_p = precompute(game, row, W)
 
     # Init
     p = game.P[row, :]
 
     # Solve
-    solution = nlsolve((x -> FOC(x, game, mc, outcomes, partner, w_signed, joint_p, out)), p[active_n[1:4]])
+    solution = nlsolve((x -> FOC(x, game.sigma, game.p0, mc, outcomes, partner, w_signed, joint_p, out)), p[active_n[1:4]])
     p[active_n[1:4]] = solution.zero
 
     # Compute demand
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
+    # TODO: check (sum(d)<0.5)
     not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>2*game.p0)
     if not_solved
         p = update_p_BR(game, game.P[row,:], row, W)
@@ -195,11 +184,11 @@ end
 
 """Compute demand and profits"""
 function compute_PI(game, P::Matrix{Float64})::Tuple{Matrix{Float64},Matrix{Float64},Matrix{Float64},Array{Float64}}
-    U = -[P ones(game.ms,1).*game.p0] .* game.sigma             # Consumer utility
+    U = -[P ones(game.ms,1).*game.p0] .* game.sigma     # Consumer utility
     E = exp.(U * game.outcomes') .* game.active_outcomes# Expontential utility
     Q = E ./ (sum(E, dims=2))                           # Product demand
     D = Q * game.outcomes[:,1:4]                        # Firm demand
-    PI = D .* (P .- game.mc)                         # Profits
+    PI = D .* (P .- game.mc)                            # Profits
     bonus = 1 .+ (game.S[:,5]./3)
     CS = 2*game.p0 .+ log.(sum(E, dims=2) .* bonus) ./ game.sigma
     return Q, D, PI, CS
