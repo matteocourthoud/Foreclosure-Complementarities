@@ -45,7 +45,6 @@ function solve_game(game)
 
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
-    game.P, game.V = solve_lbd.init_P(game)
 
     # Extra init
     V_noincentives = game.V

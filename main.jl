@@ -30,7 +30,7 @@ for policy in policies
             else
                 game_solved = solve_lbd.solve_game(game);
             end
-            if (sigma==10.0) & (alpha==0.7)
+            if (sigma==7.0) & (alpha==0.7)
                 postprocess.compute_transitions(game_solved)
                 postprocess.compute_timelines(game_solved)
             end

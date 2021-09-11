@@ -16,18 +16,6 @@ function export_game(game)
     end
 end
 
-"""Initialize price"""
-function init_P(game)::Tuple{Matrix{Float64},Matrix{Float64}}
-    game.P = 2 * game.mc
-    V = 2 .- game.mc
-    V[game.S[:,1:4].==0] .= 0
-    #V = zeros(size(game.mc))
-    W = compute_W(game, V)
-    P = update_P_BR(game, W)
-    return P, V
-
-end
-
 """Correct prices for 1 firm with 1 product"""
 function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
     for row=1:size(game.S,1)
@@ -178,7 +166,7 @@ function update_p_FOC(game, W, row)::Vector{Float64}
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
-    not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>10)
+    not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>2*game.p0)
     if not_solved
         p = update_p_BR(game, game.P[row,:], row, W)
     end
@@ -241,9 +229,6 @@ function solve_game(game)
         #return game_solved
     end
 
-    # Init values
-    game.P, game.V = init_P(game)
-
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
     rate = 1
@@ -255,14 +240,14 @@ function solve_game(game)
         V2, game.pr_merger = dynamics.update_V_merger(game, V3);
         V1, game.P, game.Q, game.D, game.PI, game.CS = update_V(game, V2);
         # Compute distance
-        rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
+        #rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
         dist = max(abs.(game.V - V1)...);
         # Update value function
-        r = rand() * (rate > 1) * (iter > 300);
+        r = rand() * (iter > 400) # * (rate > 1)
         game.V = game.V .* r + V1 .* (1-r)
         # Print update
         if iter % 10 == 0
-            print("\rIter ", iter, ": ", dist, " (", rate, ")")
+            print("\rIter ", iter, ": ", dist)
         end
         iter += 1
     end
