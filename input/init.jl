@@ -9,12 +9,12 @@ Base.@kwdef mutable struct model
 
     """Default Properties"""
     policy::String = "baseline"                 # Name of policy
-    smax::Int8 = Int8(5)                        # Number of states per side of the market
-    alpha::Float64 = 0.9                        # Learning parameter
+    smax::Vector{Int8} = Int8[5,1]              # Number of states per side of the market
+    alpha::Float64 = 0.8                        # Learning parameter
     beta::Float64 = 0.95                        # Discount factor
     c::Float64 = 1.0                            # Marginal cost
-    gamma::Float64 = 1.0                        # Complementarity parameter
-    sigma::Float64 = 9.0                        # Competition parameter
+    gamma::Float64 = 0.0                        # Complementarity parameter
+    sigma::Float64 = 5.0                        # Competition parameter
     p0::Float64 = 1.5                           # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
     cost_entry::Vector{Int8} = [0;10];          # Entry cost
@@ -74,27 +74,32 @@ end
 StructTypes.StructType(::Type{model}) = StructTypes.Mutable()
 
 """Get actions of the platform: order of firms"""
-function get_state_space(smax::Int8, policy::String)::Matrix{Int8}
+function get_state_space(smax::Vector{Int8}, policy::String)::Matrix{Int8}
     S = Int8.(zeros(0,5))
-    i1max = (policy == "nolearning") ? 1 : smax
+    i1max = (policy == "nolearning") ? 1 : smax[1]
+    i3max = (policy == "nolearning") ? 1 : smax[2]
     O = (policy == "nomergers") ? [0] : [0,1,3]
     for o=O
         for i1=1:i1max
-            i3=1
-            i2max = i1 * (o!=1) + i1max * (o==1)
-            for i2=(o==3):i2max
-                i4max = i1 * (o!=1) + (o==1)
-                for i4=(o==3):i3
-                    s = reshape([i1, i2, i3, i4, o], (1,5))
-                    S = [S; s]
+            for i3=1:i3max
+                i2max = i1 * (o!=1) + i1max * (o==1)
+                for i2=(o==3):i2max
+                    i4max = i3 * (o==0) + i3max * (o!=0)
+                    for i4=(o==3):i4max
+                        s = reshape([i1, i2, i3, i4, o], (1,5))
+                        S = [S; s]
+                    end
                 end
             end
         end
     end
+    # Sort columns
     S = [S reshape(sum(S[:,1:4].>0, dims=2), (size(S, 1), 1))]
-    S = sortslices(S, dims=1, by=x->x[5], rev=false)
     S = sortslices(S, dims=1, by=x->x[3], rev=false)
+    S = sortslices(S, dims=1, by=x->x[1], rev=false)
+    S = sortslices(S, dims=1, by=x->x[2], rev=false)
     S = sortslices(S, dims=1, by=x->x[4], rev=false)
+    S = sortslices(S, dims=1, by=x->x[5], rev=false)
     S = sortslices(S, dims=1, by=x->x[6], rev=false)
     S = S[:, 1:5]
     return S
@@ -156,17 +161,18 @@ function find_states(states::Matrix{Int8}, S::Matrix{Int8})::Matrix{Int64}
 end
 
 """Compute marginal cost"""
-function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Int8, policy::String)::Matrix{Float64}
+function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Vector{Int8}, policy::String)::Matrix{Float64}
     mc = c .* S[:,1:4].^log2(alpha);
     if (policy == "nolearning")
-        mc[:,1:2] =  c .* (S[:,1:2] .* smax).^log2(alpha);
+        mc[:,1:2] =  c .* (S[:,1:2] .* smax[1]).^log2(alpha);
+        mc[:,3:4] =  c .* (S[:,3:4] .* smax[2]).^log2(alpha);
     end
     mc[S[:,1:4].==0] .= 0
     return mc
 end
 
 """Compute index when making a sale"""
-function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Int8, outcomes::Matrix{Int8}, active_outcomes::Matrix{Float64}, policy::String)::Array{Int64, 3}
+function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes::Matrix{Int8}, active_outcomes::Matrix{Float64}, policy::String)::Array{Int64, 3}
 
     # Init I_up: state x product x firm
     K = size(outcomes,1)
@@ -174,7 +180,7 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Int8, outcomes::Matrix
 
     # Init maximum achievable state
     Sfirms = S[:,1:4];
-    Smax = (policy == "nolearning") ? [1 1 1 1] : [smax smax 1 1]
+    Smax = (policy == "nolearning") ? [1 1 1 1] : [smax[1] smax[1] smax[2] smax[2]]
 
     # Loop over outcomes
     for k=1:K
@@ -267,7 +273,7 @@ function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{
                     s[partner] = 0;
                 end
 
-                # Change ownership
+                # Decrease ownership if nonzero
                 s[5] = s[5] - (e in [1,3]) * (o in [1,3]);
                 s[5] = s[5] - 2 * (e in [2,4]) * (o == 3);
 
@@ -321,7 +327,6 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
                 end
 
                 # Change ownership
-                # TODO: unnecessary condition
                 s[5] = s[5] + (p in [1,3]) * (o in [0,2]);
                 s[5] = s[5] + 2 * (p in [2,4]) * (o in [0,1]);
             end

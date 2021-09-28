@@ -9,10 +9,28 @@ include("dynamics.jl")
 include("postprocess.jl")
 
 """Export game"""
-function export_game(game)
+function export_game(game, dist::Float64, iter::Int64)
+    # Export
     filename = game.filename
     open("output/games/$filename.json", "w") do io
         JSON3.write(io, game)
+    end
+
+    # If there were issues, save it
+    if (dist>100*game.accuracy)
+        open("issues.txt","a") do io
+           println(io, string(game.filename, " : dist=", dist))
+        end
+    elseif (max(game.Q[:,end]...)>0.9)
+        row = argmax(game.Q[:,end])
+        open("issues.txt","a") do io
+           println(io, string(game.filename, " : state=", game.S[row, :],
+           " prices=", round.(game.P[row, :],digits=1)))
+        end
+    elseif (iter>400)
+        open("issues.txt","a") do io
+           println(io, string(game.filename, " : iter=", iter))
+        end
     end
 end
 
@@ -56,16 +74,16 @@ function precompute(game, row::Int64, W::Array{Float64,3})
     outcomes = game.outcomes[active_out, active_n]'
     w = W[row, active_out, active_n[1:4]]'
     sign = (outcomes[1:end-1,:] .> 0) .- (outcomes[1:end-1,:] .== 0)
-    w .+= (partner.>0) ? W[row, active_out, game.partner[active_n[1:4]]]' : 0
-    w_signed = Float64.(sign .* w)
+    w_signed = copy(w)
+    w_signed += W[row, active_out, game.partner[active_n[1:4]]]' .* (partner.>0)
+    w_signed .*= sign
     joint_p = Int8.([1,2,1,2][active_n[1:4]])
 
     return active_n, out, mc, outcomes, partner, w, w_signed, joint_p
-
 end
 
 """Compute demand"""
-function demand(p::Vector{Float64}, sigma::Float64, p0::Float64, outcomes::Matrix{Int8}, out::Matrix{Float64})::Tuple{Matrix{Float64},Vector{Float64}}
+function demand(p::Vector{Float64}, sigma::Float64, p0::Float64, outcomes, out)::Tuple{Matrix{Float64},Vector{Float64}}
     u = - [p; p0] .* sigma          # Utility
     u = u .- max(u...)              # Normalize
     e = exp.(u' * outcomes) .* out  # Exponential of utility * outcomes
@@ -75,7 +93,7 @@ function demand(p::Vector{Float64}, sigma::Float64, p0::Float64, outcomes::Matri
 end
 
 """Compute profits for BR iteration"""
-function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes::Matrix{Int8}, partner::Vector{Int8}, w::Array{Float64,3}, out::Matrix{Float64})::Float64
+function BR(x::Vector{Float64}, n::Int64, p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes, partner::Vector{Int8}, w, out)::Float64
     p[n] = x[1]                                         # Insert price of firm n
     q, d = demand(p, sigma, p0, outcomes, out)# Compute demand
     V = (p .- mc) .* d + sum(w .* q, dims=2)            # Compute value
@@ -115,7 +133,7 @@ function update_P_BR(game, W::Array{Float64,3})::Matrix{Float64}
 end
 
 """First order condition"""
-function FOC(p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes::Matrix{Int8}, partner::Vector{Int8}, w_signed::Array{Float64,3}, joint_p::Vector{Int8}, out::Matrix{Float64})::Vector{Float64}
+function FOC(p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes, partner::Vector{Int8}, w_signed::Matrix{Float64}, joint_p::Vector{Int8}, out)::Vector{Float64}
 
     # Compute demand
     q, d = demand(p, sigma, p0, outcomes, out)
@@ -127,7 +145,7 @@ function FOC(p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64
     # Compute extra: ownership
     EO = zeros(length(p))
     for (n, ptn) in enumerate(partner)
-        if p_n>0
+        if ptn>0
             EO[n] = (q[joint_p[n]] - d[n]*d[ptn]) * (p[ptn] .- mc[ptn])
         end
     end
@@ -154,10 +172,9 @@ function update_p_FOC(game, W::Array{Float64,3}, row::Int64)::Vector{Float64}
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
-    # TODO: check (sum(d)<0.5)
-    not_solved = (solution.f_converged==false) || (sum(d)<0.5) || (max(p...)>2*game.p0)
+    not_solved = (solution.f_converged==false) || (q[end]>0.7) #|| (max(p...)>2*game.p0)
     if not_solved
-        p = update_p_BR(game, game.P[row,:], row, W)
+         p = update_p_BR(game, 2 .* game.mc[row,:], row, W)
     end
 
     return p
@@ -218,6 +235,10 @@ function solve_game(game)
         #return game_solved
     end
 
+    # Initialize prices to best reply prices
+    P = update_P_BR(game, compute_W(game, game.V))
+    game.P = correct_P(game, P)
+
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
     rate = 1
@@ -244,20 +265,14 @@ function solve_game(game)
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[3,4,8,9,10,11,13,14]], "\n\n");
+        print("\n\n", sumstats[:,[7:8; 12:18]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end
 
     # Export game
-    export_game(game)
+    export_game(game, dist, iter)
 
-    # If there were issues, save it
-    if (dist>100*game.accuracy) || (min(sum(game.D, dims=2)...)<0.01)
-        open("issues.txt","a") do io
-           println(io, string(game.filename, " : ", dist))
-        end
-    end
     return game
 end
 

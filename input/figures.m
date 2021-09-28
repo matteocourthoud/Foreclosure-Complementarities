@@ -17,8 +17,8 @@ classdef figures
         policies = ["baseline", "nolearning", "nomergers", ...
             "datasharing", "limitedmergers",  ...
             "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"];
-        statlimits = [3,1,1,1,1,3,3,5,1,1,1]; % Stats min and max
-        difflimits = [3,1,1,1,1,1,1,.3,1,1,1]; % Stats min and max for differences
+        statlimits = [5,1,1,1,1,3,3,5,1,1,1]; % Stats min and max
+        difflimits = [5,1,1,1,1,1,1,.3,1,1,1]; % Stats min and max for differences
         varnames = ["Price - Cost (short run)", "Below Cost Pricing (short run)", ...
             "Entry Probability (short run)", "Exit Probability (short run)", ...
             "Merger Probability (short run)", ...
@@ -27,7 +27,7 @@ classdef figures
         matketnames = ["Monopoly in A&B","B Monopoly in A&B",...
                     "mixed M/Dpoly","B mixed M/Dpoly",...
                     "Duopoly in A&B","B/2 Duopoly in A&B","B Duopoly in A&B"];
-        filename = "a70g50s100";
+        filenames = ["a70g0s30", "a30g0s70"];
         beta = 0.95;
         c = 1;
         gamma = 0;
@@ -38,7 +38,7 @@ classdef figures
     methods (Static)
         
         % Plot one timeline
-        function plot_timeline(data, S, T, j, colors, filename)
+        function plot_timeline(data, S, T, j, colors, file, policy)
             
             % Init
             colnames = data.Properties.VariableNames(3:end);
@@ -78,7 +78,7 @@ classdef figures
             annotation('textbox',[0.02 rely*0.81+0.14 .1 0],'String',['Long-Run', newline, 'B Dpoly'],'FitBoxToText','on','Color','b','EdgeColor','none','FontSize', 14)
 
             % Save
-            saveas(gca, sprintf("%s_%s.png", filename, colnames{j}));
+            saveas(gca, sprintf('../output/timelines/%s_%s_%s.png', policy, file, colnames{j}));
             close;
         end
 
@@ -86,21 +86,23 @@ classdef figures
         function plot_all_timelines()
             
             % Loop over policies
-            for policy=figures.policies
-                
-                % Import data
-                filename = sprintf('../output/timeseries/%s_%s', policy, figures.filename);
-                data = readtable(sprintf("%s.csv", filename));
+            for file=figures.filenames
+                for policy=figures.policies
 
-                % Get colors
-                T = unique(data.t);
-                S = unique(data(data.t>0, "s"));
-                palette = palettes.("viridis");
-                colors = interp1(linspace(0,1,size(palette,1)),palette,linspace(0,1,size(S,1)));
+                    % Import data
+                    filename = sprintf('../output/timeseries/%s_%s', policy, file);
+                    data = readtable(sprintf("%s.csv", filename));
 
-                % Make figures for each stat
-                for j=1:size(data, 2)-2
-                    figures.plot_timeline(data, S, T, j, colors, filename)
+                    % Get colors
+                    T = unique(data.t);
+                    S = unique(data(data.t>0, "s"));
+                    palette = palettes.("viridis");
+                    colors = interp1(linspace(0,1,size(palette,1)),palette,linspace(0,1,size(S,1)));
+
+                    % Make figures for each stat
+                    for j=1:size(data, 2)-2
+                        figures.plot_timeline(data, S, T, j, colors, file, policy)
+                    end
                 end
             end
                         
@@ -115,15 +117,14 @@ classdef figures
 
             % Loop over rows and columns
             for j=1:J-1
-                bottoms = ybars_bottom(:,j+1)';
+                bottom_rights = ybars_bottom(:,j+1)';
                 for i=1:I
 
                     % Get corners
                     top_lefts = (cumsum(Q(i,:,j)) - Q(i,:,j)) * pr_s1(i,j)*0.9 + ybars_bottom(i,j);
                     bottom_lefts = cumsum(Q(i,:,j)) * pr_s1(i,j)*0.9 + ybars_bottom(i,j);
-                    top_rights = bottoms;
-                    bottom_rights = top_rights + bottom_lefts - top_lefts;
-                    bottoms = bottoms + bottom_lefts - top_lefts;
+                    top_rights = bottom_rights;
+                    bottom_rights = bottom_rights + bottom_lefts - top_lefts;
 
                     % Get coordinates
                     [X, Y] = figures.get_coordinates(j, J, top_lefts, bottom_lefts, top_rights, bottom_rights);
@@ -134,6 +135,15 @@ classdef figures
             end
 
         end
+        
+        % Makes curve between two points
+        function [x, y] = get_curves(x1, y1, x2, y2)
+            t = linspace(0, pi, 15);
+            c = (1-cos(t))./2; 
+            Ncurves = numel(y1);
+            y = repmat(y1, 15, 1) + repmat(y2 - y1, 15,1) .* repmat(c', 1, Ncurves);
+            x = repmat(linspace(x1, x2, 15)', 1, Ncurves);
+        end 
 
         % Get shape coordinates
         function [X, Y] = get_coordinates(j, J, top_lefts, bottom_lefts, top_rights, bottom_rights)
@@ -147,17 +157,7 @@ classdef figures
             X = [bottom_x; top_x];
             Y = [bottom_y; top_y];
         end
-
-        % Makes curve between two points
-        function [x, y] = get_curves(x1, y1, x2, y2)
-            t = linspace(0, pi, 15);
-            c = (1-cos(t))./2; 
-            Ncurves = numel(y1);
-            y = repmat(y1, 15, 1) + repmat(y2 - y1, 15,1) .* repmat(c', 1, Ncurves);
-            x = repmat(linspace(x1, x2, 15)', 1, Ncurves);
-        end 
-
-
+       
         % Compute vertical coordinates of bars
         function [ybars_bottom, ybars_top] = get_ybars(pr_s1, I, J)
             ybars_bottom = zeros(size(pr_s1));
@@ -188,7 +188,6 @@ classdef figures
 
         % Make graph pretty
         function prettify(title, pr_s1, ylabels, xlabels, ymeans, I, J)
-            % Make graph look pretty
 
             % Y labels
             for i=1:I
@@ -209,7 +208,7 @@ classdef figures
             text((J+1)/2, 1.07, "Periods", 'HorizontalAlignment', 'center', 'Fontsize', 12,'Fontweight', 'Bold', 'Color', [.4 .4 .4])
 
             % Title
-            text((J+1)/2, -0.12, title, 'HorizontalAlignment', 'center', 'Fontsize', 20)
+            text((J+1)/2, -0.1, title, 'HorizontalAlignment', 'center', 'Fontsize', 20)
 
             % Font
             set(gca, 'FontName', 'SansSerif')
@@ -217,17 +216,19 @@ classdef figures
         end
         
         % Make alluvial plot
-        function plot_alluvial(data, policy)
+        function plot_alluvial(data, policy, file)
             
             % Init
             I = length(unique(data.s));
             T = unique(data.t);
             J = length(T);
-            pr_s1 = reshape(data.pr_s1, I, J);
-            pr_s1 = [ones(I,1)/I, pr_s1];
+            pr_s1 = ones(I,J+1)/I;
             Q = zeros(I, I, J);
             for t=1:length(T)
                Q(:,:,t) = table2array(data(data.t==T(t), 4:end));
+            end
+            for j=1:J
+                pr_s1(:,j+1) = pr_s1(:,j)' * Q(:,:,j);
             end
             
             % Setup
@@ -251,8 +252,9 @@ classdef figures
             % Plot
             figure();
             set(gcf,'position',[100,1000,900,500]);
-            axis ij
+            ylim([-0.05,1]);
             axis off
+            axis ij
             hold on
 
             % Plot flows
@@ -266,7 +268,7 @@ classdef figures
             figures.prettify(title, pr_s1, ylabels, xlabels, ymeans, I, J)
             
             % Save and close
-            saveas(gca, sprintf('../output/alluvial/game_%s.png', policy));
+            saveas(gca, sprintf('../output/alluvial/game_%s_%s.png', file, policy));
             close;
 
         end
@@ -275,17 +277,23 @@ classdef figures
         function make_all_alluvialplots()
             
             % Loop over policies
-            for policy=figures.policies
-                
-                % Import data
-                filename = sprintf('../output/transitions/%s_%s', policy, figures.filename);
-                data = readtable(sprintf("%s.csv", filename));
+            for file=figures.filenames
+                for policy=figures.policies
 
-                %set(gca, 'OuterPosition', [-0.15,0,1.27,1.1])
-                figures.plot_alluvial(data, policy);
+                    % Import data
+                    filename = sprintf('../output/transitions/%s_%s', policy, file);
+                    data = readtable(sprintf("%s.csv", filename));
+
+                    %set(gca, 'OuterPosition', [-0.15,0,1.27,1.1])
+                    figures.plot_alluvial(data, policy, file);
+                end
             end
         end
                
+        
+        
+        
+        
         
         
         
@@ -380,7 +388,7 @@ classdef figures
 
                     % Plot
                     figure();
-                    contourf(compstats,10,'linestyle','none'); 
+                    contourf(compstats,20,'linestyle','none'); 
                     figures.prettify_compstats(l, v1, v2, 0);
 
                     % Save
@@ -418,7 +426,7 @@ classdef figures
 
                     % Plot
                     figure();
-                    contourf(relative_compstats,10,'linestyle','none'); 
+                    contourf(relative_compstats,20,'linestyle','none'); 
                     figures.prettify_compstats(l, v1, v2, 1);
 
                     % Save
@@ -453,7 +461,7 @@ classdef figures
             yticks = [2, (numel(v1)+1)/2, numel(v1)-1];
             yticklabels = round(v1(max(1,floor(yticks))),1);
             xticks = [2, (numel(v2)+1)/2, numel(v2)-1];
-            xticklabels = round(v2(max(1,floor(yticks))),1);
+            xticklabels = round(v2(max(1,floor(xticks))),1);
             set(gca,'XTick',xticks,'XTickLabel',xticklabels,'YTick',yticks,'YTickLabel',yticklabels);
             ylabel('Product Differentiation: \sigma','FontWeight','bold', 'Color', [.4 .4 .4])
             xlabel('Economies of scale: \alpha','FontWeight','bold', 'Color', [.4 .4 .4])

@@ -46,10 +46,16 @@ function solve_game(game)
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")
 
-    # Extra init
-    V_noincentives = game.V
+    # Make indexes
     idx_nolearning = compute_idx_nolearning(game.S, game.smax)
     idx_nobundling = compute_idx_nobundling(game.S)
+
+    # Initialize value without incentives
+    V_noincentives = game.V
+
+    # Initialize prices to best reply prices
+    P = solve_lbd.update_P_BR(game, solve_lbd.compute_W(game, game.V))
+    game.P = solve_lbd.correct_P(game, P)
 
     # Iterate until convergence
     rate = 1
@@ -94,14 +100,14 @@ function solve_game(game)
         V_noincentives, _, _, _, _, _ = solve_lbd.update_V(game, V_noincentives, V_noincentives, game.P);
 
         # Compute distance
-        rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
+        #rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
         dist = max(abs.(game.V - V1)...);
         # Update value function
-        r = rand() * (rate > 1) * (iter > 300);
+        r = rand() * (iter > 400) # * (rate > 1)
         game.V = game.V .* r + V1 .* (1-r)
         # Print update
         if iter % 10 == 0
-            print("\rIter ", iter, ": ", dist, " (", rate, ")")
+            print("\rIter ", iter, ": ", dist)
         end
         iter += 1
     end
@@ -109,20 +115,13 @@ function solve_game(game)
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[3,4,8,9,10,11,13,14]], "\n\n");
+        print("\n\n", sumstats[:,[7; 10:18]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end
 
     # Export game
-    solve_lbd.export_game(game)
-
-    # If there were issues, save it
-    if (dist>100*game.accuracy) || (min(sum(game.D, dims=2)...)<0.01)
-        open("issues.txt","a") do io
-           println(io, string(game.filename, " : ", dist))
-        end
-    end
+    solve_lbd.export_game(game, dist, iter)
     return game
 end
 
