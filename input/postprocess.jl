@@ -226,7 +226,7 @@ function compute_sumstats()
         print("\n\n", filename);
         game = init.import_game(filename)
         sumstats = get_sumstats(game);
-        print("\n", sumstats[:,[3,4,6,7,9,10,11,12]], "\n\n");
+        print("\n", sumstats[:,[7:8; 12:18]], "\n\n");
         save_to_csv(sumstats, "sumstats", game.policy)
     end
 end

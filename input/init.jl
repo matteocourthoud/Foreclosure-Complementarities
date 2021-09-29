@@ -17,9 +17,9 @@ Base.@kwdef mutable struct model
     sigma::Float64 = 5.0                        # Competition parameter
     p0::Float64 = 1.5                           # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
-    cost_entry::Vector{Int8} = [0;10];          # Entry cost
-    value_exit::Vector{Int8} = [0;1];           # Exit scrap values
-    cost_merger::Vector{Int8} = [0;10];         # Merger cost
+    cost_entry::Vector{Float64} = [0;10];       # Entry cost
+    value_exit::Vector{Float64} = [0;0.5];     # Exit scrap values
+    cost_merger::Vector{Float64} = [0;10];      # Merger cost
     entry::Bool = true                          # Entry
     exit::Bool = true                           # Exit
     mergers::Bool = (policy != "nomergers")     # Mergers
@@ -60,7 +60,7 @@ Base.@kwdef mutable struct model
     pr_exit::Matrix{Float64} = zeros(ms,4)      # Probability of exit
     pr_merger::Matrix{Float64} = zeros(ms,4)    # Probability of merger
     active_firms::BitMatrix = Bool.([S[:,1:4] .> 0 ones(ms, 1)])
-    active_outcomes::Matrix{Float64} = compute_active_outcomes(S, ms, outcomes, gamma)
+    active_outcomes::Matrix{Float64} = compute_active_outcomes(S, ms, outcomes, gamma, policy)
     markets::Vector{Int64} = compute_markets(S, ms)
     marketnames::Vector{String} = compute_marketnames(S)
     idx_up::Array{Int64,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
@@ -207,9 +207,9 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes
     return idx_up
 end
 
+"""Compute entry index: in each state, to which state would each
+   firm move to, for each possible firm entry?"""
 function compute_idx_entry(S::Matrix{Int8}, ms::Int64, entry::Bool)::Array{Int64,3}
-    """Compute entry index: in each state, to which state would each
-       firm move to, for each possible firm entry?"""
 
     # Init map. Dimensions: states x entrant x firms
     idx_entry = Int64.(zeros(ms, 4, 4));
@@ -347,16 +347,19 @@ end
 
 
 """Compute which outcomes are active in each state"""
-function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64)::Matrix{Float64}
+function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64, policy::String)::Matrix{Float64}
     active_outcomes = zeros(ms, size(outcomes,1))
     # Both firms must be active
     for i=1:ms
         active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
-    # With double ownership, only 1,2,9 are active
-    active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
-    # With single ownership only 1,2,6,8,9 are active
-    active_outcomes[:, [3,4,5,7]] = active_outcomes[:, [3,4,5,7]] .* (S[:,5] .!= 1)
+    # No bundling policy
+    if policy != "nobundling"
+        # With double ownership, only 1,2,9 are active
+        active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
+        # With single ownership only 1,2,6,8,9 are active
+        active_outcomes[:, [3,4,5,7]] = active_outcomes[:, [3,4,5,7]] .* (S[:,5] .!= 1)
+    end
     # Partial complementarity
     active_outcomes[:, 5:end-1] = active_outcomes[:, 5:end-1] .* gamma
     return active_outcomes

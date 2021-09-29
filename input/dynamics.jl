@@ -3,7 +3,7 @@
 module dynamics
 
 """Compute probability"""
-function compute_p(Delta::Vector{Float64}, c::Vector{Int8})::Tuple{Vector{Float64},Vector{Float64}}
+function compute_p(Delta::Vector{Float64}, c::Vector{Float64})::Tuple{Vector{Float64},Vector{Float64}}
     p = min.(max.( (Delta .- c[1]) ./ (c[2]-c[1]), 0), 1) ./ 4;
     ev = max.(c[1] .+ (min.(Delta, c[2]) .- c[1]) ./ 2, 0);
     return p, ev

@@ -11,12 +11,14 @@ include("input/predatory.jl")
 include("input/postprocess.jl")
 
 # Disp function
-disp(x) = Base.print_matrix(stdout, Float32.(x))
+disp(x) = Base.print_matrix(stdout, round.(x, digits=4))
 
 # Init
 precompile(solve_lbd.solve_game, (Main.init.model,))
 precompile(predatory.solve_game, (Main.init.model,))
-policies = ["baseline", "nolearning", "nomergers", "datasharing", "limitedmergers", "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
+policies = ["baseline", "nolearning", "nomergers",
+            "datasharing", "limitedmergers", "nobundling",
+            "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
 
 # Delete all existing games and issues file
 [rm(f) for f in readdir() if f=="issues.txt"]
@@ -41,7 +43,7 @@ end
 # Generate comparative statics
 for policy in policies
     for sigma = 1:1:10
-        for gamma = 0.0:1.0:1.0
+        for gamma = 0.0
             for alpha = 0.0:0.1:1.0
                 game = init.model(policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
                 if contains(game.policy, "nopred")

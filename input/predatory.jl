@@ -53,9 +53,8 @@ function solve_game(game)
     # Initialize value without incentives
     V_noincentives = game.V
 
-    # Initialize prices to best reply prices
-    P = solve_lbd.update_P_BR(game, solve_lbd.compute_W(game, game.V))
-    game.P = solve_lbd.correct_P(game, P)
+    # Initialize prices to best reply prices with zero value
+    game.P = solve_lbd.update_P_BR(game, solve_lbd.compute_W(game, game.V))
 
     # Iterate until convergence
     rate = 1
@@ -115,7 +114,7 @@ function solve_game(game)
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[7; 10:18]], "\n\n");
+        print("\n\n", sumstats[:,[7:8; 12:18]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end

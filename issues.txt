@@ -1,106 +1,63 @@
-limitedmergers_a30g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[12.5, 8.6, 2.0, 2.0]
-nopredentrypricing_a30g0s70 : iter=672
-limitedmergers_a70g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[7.9, 7.6, 2.0, 2.0]
-baseline_a60g100s50 : iter=404
-baseline_a20g100s70 : iter=448
-baseline_a60g100s70 : iter=462
-baseline_a20g100s80 : iter=597
-baseline_a0g100s100 : iter=433
-nomergers_a60g0s60 : dist=2.678887167828492e-5
-nomergers_a20g100s60 : iter=631
-nomergers_a60g100s70 : dist=2.798974243489738e-6
-nomergers_a70g100s80 : iter=453
-datasharing_a80g100s80 : iter=471
-limitedmergers_a20g0s50 : state=Int8[1, 1, 1, 1, 0] prices=[3.5, 3.5, 3.9, 3.9]
-limitedmergers_a30g0s50 : state=Int8[1, 1, 1, 1, 0] prices=[3.4, 3.4, 3.9, 4.0]
-limitedmergers_a40g0s50 : state=Int8[1, 1, 1, 1, 0] prices=[3.0, 3.0, 2.0, 2.0]
-limitedmergers_a50g0s50 : state=Int8[1, 1, 1, 1, 0] prices=[2.7, 2.7, 1.7, 1.7]
-limitedmergers_a10g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[13.7, 13.7, 2.0, 2.0]
-limitedmergers_a20g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[11.1, 11.1, 2.0, 2.0]
-limitedmergers_a30g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[10.8, 10.8, 2.0, 2.0]
-limitedmergers_a40g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[11.0, 11.0, 2.0, 2.0]
-limitedmergers_a50g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[10.2, 10.2, 2.0, 2.0]
-limitedmergers_a60g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[7.9, 7.9, 2.0, 2.0]
-limitedmergers_a70g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[6.0, 21.9, 2.0, 2.0]
-limitedmergers_a20g100s60 : iter=671
-limitedmergers_a10g0s70 : state=Int8[1, 1, 1, 1, 0] prices=[6.5, 6.5, 2.0, 2.0]
-limitedmergers_a20g0s70 : state=Int8[3, 3, 1, 1, 0] prices=[8.6, 25.8, 2.0, 2.0]
-limitedmergers_a30g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[12.5, 8.6, 2.0, 2.0]
-limitedmergers_a40g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[11.4, 15.1, 2.0, 2.0]
-limitedmergers_a50g0s70 : state=Int8[3, 3, 1, 1, 0] prices=[6.7, 9.5, 2.0, 2.0]
-limitedmergers_a60g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[5.5, 4.9, 2.0, 2.0]
-limitedmergers_a70g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[7.9, 7.6, 2.0, 2.0]
-limitedmergers_a80g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[8.5, 8.4, 2.0, 2.0]
-limitedmergers_a20g100s70 : iter=416
-limitedmergers_a60g100s70 : dist=0.006137997382132276
-limitedmergers_a10g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[10.6, 10.6, 2.0, 2.0]
-limitedmergers_a20g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[8.4, 8.4, 2.0, 2.0]
-limitedmergers_a30g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[8.3, 8.3, 2.0, 2.0]
-limitedmergers_a40g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[7.9, 7.9, 2.0, 2.0]
-limitedmergers_a50g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[7.4, 7.4, 2.0, 2.0]
-limitedmergers_a60g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[6.7, 6.7, 2.0, 2.0]
-limitedmergers_a70g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[5.8, 5.8, 2.0, 2.0]
-limitedmergers_a80g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[16.3, 4.9, 2.0, 2.0]
-limitedmergers_a90g0s80 : state=Int8[1, 1, 1, 1, 0] prices=[3.8, 3.8, 2.0, 2.0]
-limitedmergers_a20g100s80 : iter=631
-limitedmergers_a70g100s80 : iter=444
-limitedmergers_a0g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[30.2, 5.0, 2.0, 2.0]
-limitedmergers_a10g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[30.8, 5.2, 2.0, 2.0]
-limitedmergers_a20g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[30.5, 5.7, 2.0, 2.0]
-limitedmergers_a30g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[27.5, 6.9, 2.0, 2.0]
-limitedmergers_a40g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[24.8, 3.0, 4.6, 4.6]
-limitedmergers_a50g0s90 : state=Int8[3, 3, 1, 1, 0] prices=[24.9, 7.8, 2.0, 2.0]
-limitedmergers_a60g0s90 : state=Int8[4, 4, 1, 1, 0] prices=[21.4, 8.4, 2.0, 2.0]
-limitedmergers_a70g0s90 : state=Int8[1, 1, 1, 1, 0] prices=[2.7, 2.7, 10.2, 3.6]
-limitedmergers_a80g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[2.1, 2.0, 4.0, 4.0]
-limitedmergers_a90g0s90 : state=Int8[1, 1, 1, 1, 0] prices=[1.8, 1.8, 1.8, 1.8]
-limitedmergers_a0g100s90 : state=Int8[1, 4, 1, 0, 1] prices=[3.3, 5.0, 3.3, 0.0]
-limitedmergers_a0g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[8.2, 8.2, 2.0, 2.0]
-limitedmergers_a10g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.2, 5.2, 2.0, 2.0]
-limitedmergers_a20g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.5, 5.5, 2.0, 2.0]
-limitedmergers_a30g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.5, 5.5, 2.0, 2.0]
-limitedmergers_a40g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.3, 5.3, 2.0, 2.0]
-limitedmergers_a50g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.0, 5.0, 2.0, 2.0]
-limitedmergers_a60g0s100 : state=Int8[3, 3, 1, 1, 0] prices=[24.3, 16.2, 2.0, 2.0]
-limitedmergers_a70g0s100 : state=Int8[4, 4, 1, 1, 0] prices=[17.5, 4.5, 2.0, 2.0]
-limitedmergers_a80g0s100 : state=Int8[4, 4, 1, 1, 0] prices=[7.5, 4.8, 2.0, 2.0]
-limitedmergers_a90g0s100 : state=Int8[3, 3, 1, 1, 0] prices=[1.7, 1.7, 2.0, 2.0]
-limitedmergers_a100g0s100 : state=Int8[2, 2, 1, 1, 0] prices=[2.0, 1.7, 1.7, 1.7]
-limitedmergers_a0g100s100 : state=Int8[1, 2, 1, 0, 1] prices=[3.0, 5.0, 3.0, 0.0]
-nopredentrypricing_a30g0s70 : iter=668
-nopredentrypricing_a30g100s70 : iter=482
-nopredentrypricing_a60g100s70 : iter=855
-nopredentrypricing_a100g0s90 : iter=458
-nopredentrypricing_a20g0s100 : iter=447
-nopredentrypricing_a30g0s100 : iter=476
-nopredentrypricing_a40g0s100 : iter=546
-nopredentrypricing_a50g0s100 : iter=652
-nopredentrypricing_a70g0s100 : dist=1.5697856312613112e-5
-nopredexitpricing_a80g0s90 : iter=503
-nopredexitpricing_a90g0s90 : dist=0.00030423615079833155
-nopredexitpricing_a100g0s90 : iter=453
-nopredentrybundling_a0g0s50 : iter=624
-nopredentrybundling_a0g100s50 : iter=827
-nopredentrybundling_a10g100s50 : iter=499
-nopredentrybundling_a20g100s50 : iter=559
-nopredentrybundling_a30g100s50 : iter=478
-nopredentrybundling_a40g100s50 : iter=536
-nopredentrybundling_a20g100s70 : iter=462
-nopredentrybundling_a60g100s70 : iter=460
-nopredentrybundling_a20g100s80 : iter=615
-nopredentrybundling_a0g100s100 : iter=559
-nopredexitbundling_a20g100s70 : iter=526
-nopredexitbundling_a30g100s70 : iter=401
-nopredexitbundling_a60g100s70 : iter=463
-nopredexitbundling_a10g0s80 : iter=452
-nopredexitbundling_a70g0s80 : iter=696
-nopredexitbundling_a20g100s80 : iter=648
-nopredexitbundling_a0g100s90 : state=Int8[1, 4, 1, 0, 1] prices=[6.3, 5.0, 6.3, 0.0]
-nopredexitbundling_a10g100s90 : iter=554
-nopredexitbundling_a60g100s90 : iter=732
-nopredexitbundling_a80g100s90 : iter=416
-nopredexitbundling_a0g100s100 : state=Int8[1, 2, 1, 0, 1] prices=[3.0, 5.0, 3.0, 0.0]
-nopredexitbundling_a20g100s100 : iter=735
-nopredexitbundling_a30g100s100 : iter=763
-nopredexitbundling_a40g100s100 : iter=839
-nopredexitbundling_a50g100s100 : dist=1.2350390079518547e-6
+baseline_a30g0s70 : state=Int8[2, 2, 1, 0, 0] prices=[-0.0, -0.6, 7.0, 0.0]
+limitedmergers_a70g0s70 : state=Int8[1, 1, 1, 1, 0] prices=[2.6, 2.6, 1.8, 1.8]
+baseline_a20g0s70 : state=Int8[1, 1, 1, 0, 0] prices=[0.5, -0.1, 7.0, 0.0]
+baseline_a30g0s70 : state=Int8[2, 2, 1, 0, 0] prices=[-0.0, -0.6, 7.0, 0.0]
+nomergers_a0g0s60 : iter=640
+nomergers_a10g0s60 : iter=489
+nomergers_a20g0s60 : iter=474
+nomergers_a30g0s60 : iter=512
+nomergers_a40g0s60 : iter=805
+limitedmergers_a0g0s60 : iter=648
+limitedmergers_a10g0s60 : iter=477
+limitedmergers_a20g0s60 : iter=458
+limitedmergers_a30g0s60 : iter=508
+limitedmergers_a40g0s60 : iter=784
+limitedmergers_a50g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[5.3, 5.3, 2.0, 2.0]
+limitedmergers_a60g0s60 : state=Int8[1, 1, 1, 1, 0] prices=[4.7, 4.7, 2.0, 2.0]
+limitedmergers_a40g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[5.4, 15.8, 2.0, 2.0]
+limitedmergers_a50g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[5.0, 5.9, 2.0, 2.0]
+limitedmergers_a60g0s70 : state=Int8[2, 2, 1, 1, 0] prices=[3.2, 4.9, 4.5, 4.5]
+limitedmergers_a70g0s70 : state=Int8[1, 1, 1, 1, 0] prices=[2.6, 2.6, 1.8, 1.8]
+limitedmergers_a80g0s70 : state=Int8[1, 1, 1, 1, 0] prices=[2.3, 2.3, 1.6, 1.6]
+limitedmergers_a30g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[9.4, 8.0, 2.0, 2.0]
+limitedmergers_a40g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[8.6, 15.3, 2.0, 2.0]
+limitedmergers_a50g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[7.2, 6.4, 2.0, 2.0]
+limitedmergers_a60g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[18.7, 5.3, 2.0, 2.0]
+limitedmergers_a70g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[6.6, 7.1, 2.0, 2.0]
+limitedmergers_a80g0s80 : state=Int8[2, 2, 1, 1, 0] prices=[5.4, 5.5, 2.0, 2.0]
+limitedmergers_a20g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[13.5, 5.8, 2.0, 2.0]
+limitedmergers_a30g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[12.9, 7.6, 2.0, 2.0]
+limitedmergers_a40g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[42.2, 21.2, 2.0, 2.0]
+limitedmergers_a50g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[5.4, 6.4, 2.0, 2.0]
+limitedmergers_a60g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[3.7, 3.6, 2.0, 2.0]
+limitedmergers_a70g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[3.5, 3.5, 2.0, 2.0]
+limitedmergers_a80g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[4.6, 4.6, 2.0, 2.0]
+limitedmergers_a90g0s90 : state=Int8[2, 2, 1, 1, 0] prices=[2.4, 2.4, 1.7, 1.7]
+limitedmergers_a20g0s100 : state=Int8[2, 2, 1, 1, 0] prices=[16.8, 5.6, 2.0, 2.0]
+limitedmergers_a40g0s100 : state=Int8[1, 1, 1, 1, 0] prices=[5.1, 5.1, 2.0, 2.0]
+limitedmergers_a50g0s100 : state=Int8[2, 2, 1, 1, 0] prices=[10.5, 5.6, 2.0, 2.0]
+limitedmergers_a60g0s100 : state=Int8[3, 3, 1, 1, 0] prices=[11.3, 5.0, 2.0, 2.0]
+limitedmergers_a70g0s100 : state=Int8[3, 3, 1, 1, 0] prices=[6.1, 6.1, 2.0, 2.0]
+limitedmergers_a80g0s100 : state=Int8[3, 3, 1, 1, 0] prices=[4.1, 4.1, 2.0, 2.0]
+limitedmergers_a90g0s100 : state=Int8[2, 2, 1, 1, 0] prices=[5.3, 5.3, 2.0, 2.0]
+nobundling_a20g0s90 : iter=748
+nobundling_a30g0s90 : state=Int8[4, 1, 1, 0, 1] prices=[0.6, 0.5, 7.3, 0.0]
+nobundling_a40g0s90 : iter=655
+nobundling_a50g0s90 : dist=3.618379222913859e-6
+nobundling_a0g0s100 : dist=1.2962178850273176e-6
+nobundling_a10g0s100 : dist=4.084097843737311e-5
+nobundling_a20g0s100 : dist=0.0004323941371495721
+nobundling_a30g0s100 : dist=0.0001238352325483305
+nobundling_a40g0s100 : dist=1.1528922675196895e-5
+nobundling_a50g0s100 : iter=996
+nobundling_a60g0s100 : iter=496
+nopredentrypricing_a50g0s90 : iter=419
+nopredentrypricing_a60g0s90 : iter=442
+nopredentrypricing_a70g0s90 : iter=930
+nopredentrybundling_a0g0s50 : iter=618
+nopredentrybundling_a10g0s50 : iter=629
+nopredentrybundling_a30g0s50 : iter=406
+nopredentrybundling_a10g0s90 : state=Int8[2, 2, 1, 0, 0] prices=[-0.3, -0.8, 27.0, 0.0]
+nopredexitbundling_a0g0s60 : iter=424
+nopredexitbundling_a20g0s60 : iter=466
+nopredexitbundling_a30g0s60 : iter=845

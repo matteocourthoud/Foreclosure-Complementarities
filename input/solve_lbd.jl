@@ -34,18 +34,17 @@ function export_game(game, dist::Float64, iter::Int64)
     end
 end
 
-"""Correct prices for 1 firm with 1 product"""
+"""Correct prices for 1 firm with 1 product: equal split"""
 function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
     for row=1:size(game.S,1)
         s = game.S[row,:]
         mc = game.mc[row,:]
         p = P[row,:]
-        sym_state = ((sum(s[1:4] .> 0).==2) && (s[5]==1)) || (s[5]==3);
-        sym_state = (s[5]>0);
-        if sym_state
+        # Equally split surplus in symmetric states
+        if (s[5]>0) & (game.policy != "nobundling")
             surplus = (p[1] + p[3]) - (mc[1] + mc[3])
             p[[1,3]] = surplus/2 .+ mc[[1,3]]
-            if (s[5]==3)
+            if (s[5]==3) & (game.policy != "nobundling")
                 surplus = (p[2] + p[4]) - (mc[2] + mc[4])
                 p[[2,4]] = surplus/2 .+ mc[[2,4]]
             end
@@ -124,11 +123,12 @@ end
 
 """Update prices in all states"""
 function update_P_BR(game, W::Array{Float64,3})::Matrix{Float64}
-    P = zeros(size(game.P))
+    P = correct_P(game, 2 * game.mc)
     for row=1:size(game.S,1)
         p = copy(game.P[row, :])
         P[row, :] = update_p_BR(game, p, row, W)
     end
+    game.P = correct_P(game, P)
     return P
 end
 
@@ -172,7 +172,7 @@ function update_p_FOC(game, W::Array{Float64,3}, row::Int64)::Vector{Float64}
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
-    not_solved = (solution.f_converged==false) || (q[end]>0.7) #|| (max(p...)>2*game.p0)
+    not_solved = (solution.f_converged==false) || (q[end]>0.5) #|| (max(p...)>2*game.p0)
     if not_solved
          p = update_p_BR(game, 2 .* game.mc[row,:], row, W)
     end
@@ -186,6 +186,7 @@ function update_P(game, W::Array{Float64,3})::Matrix{Float64}
     for row=1:size(game.S,1)
         P[row,:] = update_p_FOC(game, W, row)
     end
+    P = correct_P(game, P)
     return P
 end
 
@@ -215,7 +216,6 @@ end
 function update_V(game, V::Matrix{Float64}, args...)
     W = (length(args)==1) ? compute_W(game, args[1]) : compute_W(game, V)
     P = (length(args)==2) ? args[2] : update_P(game, W)
-    P = correct_P(game, P) # TODO: check correction
     # Update values
     Q, D, PI, CS = compute_PI(game, P)
     V1 = Float64.(zeros(size(V)))
@@ -235,9 +235,8 @@ function solve_game(game)
         #return game_solved
     end
 
-    # Initialize prices to best reply prices
+    # Initialize prices to best reply prices with zero value
     P = update_P_BR(game, compute_W(game, game.V))
-    game.P = correct_P(game, P)
 
     # Solve game
     print("\n\nSolving ", game.filename, "\n----------------------\n")

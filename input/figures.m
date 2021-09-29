@@ -15,7 +15,7 @@ classdef figures
         %policies = ["baseline", "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
         %policies = ["baseline", "nolearning", "nobundling", "datasharing", "limitedbundling"];
         policies = ["baseline", "nolearning", "nomergers", ...
-            "datasharing", "limitedmergers",  ...
+            "datasharing", "limitedmergers",  "nobundling", ...
             "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"];
         statlimits = [5,1,1,1,1,3,3,5,1,1,1]; % Stats min and max
         difflimits = [5,1,1,1,1,1,1,.3,1,1,1]; % Stats min and max for differences
@@ -42,9 +42,6 @@ classdef figures
             
             % Init
             colnames = data.Properties.VariableNames(3:end);
-            labels = ["Monopoly in A&B","I Monopoly in A&B","B Monopoly in A&B",...
-                    "mixed M/Dpoly","I mixed M/Dpoly","B mixed M/Dpoly",...
-                    "Duopoly in A&B","I Duopoly in A&B","B Duopoly in A&B"];
                 
             % Make figure
             figure();
@@ -58,7 +55,7 @@ classdef figures
             % Make pretty
             set(gca, 'FontName', 'SansSerif', 'FontSize', 12);
             xlabel("Time Periods", 'FontSize', 18);
-            legend(labels, 'Location','best', 'FontSize', 18, 'AutoUpdate','off');
+            legend(figures.matketnames, 'Location','best', 'FontSize', 18, 'AutoUpdate','off');
             set(gca, 'Xgrid', 'on', 'Ygrid', 'on', 'Box', 'off', 'TickDir', 'out', 'Gridalpha', 0.05)
             set(gca, 'XColor', [.3 .3 .3], 'YColor', [.3 .3 .3])
             set(gca, 'Linewidth', 2)
@@ -233,9 +230,6 @@ classdef figures
             
             % Setup
             xlabels = ["0", "1", "3", "5", "10", "30", "100"];
-            ylabels = ["I Monopoly in A&B","B Monopoly in A&B","B Monopoly in A&B",...
-                "mixed M/Dpoly","I mixed M/Dpoly","B mixed M/Dpoly",...
-                "Duopoly in A&B","I Duopoly in A&B","B Duopoly in A&B"];
             title = "Transition Flows";
             
             % Get vertical bars
@@ -265,7 +259,7 @@ classdef figures
 
             % Prettify
             ymeans = (ybars_bottom + ybars_top) / 2;
-            figures.prettify(title, pr_s1, ylabels, xlabels, ymeans, I, J)
+            figures.prettify(title, pr_s1, figures.matketnames, xlabels, ymeans, I, J)
             
             % Save and close
             saveas(gca, sprintf('../output/alluvial/game_%s_%s.png', file, policy));
