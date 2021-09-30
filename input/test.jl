@@ -50,7 +50,7 @@ game2 = init.model(alpha=0.4, gamma=1.0, sigma=7.0, policy="nopredexitbundling")
 
 
 # Test
-game1 = init.model(alpha=0.4, gamma=0.0, sigma=7.0)
+game1 = init.model(alpha=0.4, gamma=0.0, sigma=1.0)
 @time game1 = solve_lbd.solve_game(game1);
 
 game1 = init.model(alpha=0.4, gamma=0.0, sigma=7.0, mergers=false)
@@ -65,8 +65,12 @@ game1 = init.model(alpha=0.1, gamma=0.0, sigma=8.0, mergers=false)
 
 
 include("init.jl")
-for sigma = 1:1:10
-    for alpha = 0.0
+include("solve_lbd.jl")
+game = init.model(alpha=0.4, gamma=0.0, sigma=0.8);
+@time game_solved = solve_lbd.solve_game(game);
+
+for sigma = 2:2:10
+    for alpha = 0.2:0.2:1.0
         game = init.model(alpha=alpha, gamma=0.0, sigma=sigma);
         @time game_solved = solve_lbd.solve_game(game);
     end

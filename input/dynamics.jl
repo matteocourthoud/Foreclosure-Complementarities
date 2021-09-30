@@ -4,8 +4,14 @@ module dynamics
 
 """Compute probability"""
 function compute_p(Delta::Vector{Float64}, c::Vector{Float64})::Tuple{Vector{Float64},Vector{Float64}}
+    # Uniform
     p = min.(max.( (Delta .- c[1]) ./ (c[2]-c[1]), 0), 1) ./ 4;
     ev = max.(c[1] .+ (min.(Delta, c[2]) .- c[1]) ./ 2, 0);
+    # Exponential
+    #Delta = max.(Delta, 0)
+    #p = (1 .- exp.( - Delta ./ c[2])) ./ 4;
+    #ev = c[2] .- Delta .* exp.( - Delta ./ c[2]) ./ (1 .- exp.( - Delta ./ c[2]))
+    #ev[Delta.==0] .= 0
     return p, ev
 end
 

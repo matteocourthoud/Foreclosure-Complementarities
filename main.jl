@@ -43,7 +43,7 @@ end
 # Generate comparative statics
 for policy in policies
     for sigma = 1:1:10
-        for gamma = 0.0
+        for gamma = 0.0:0.5:1.0
             for alpha = 0.0:0.1:1.0
                 game = init.model(policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
                 if contains(game.policy, "nopred")
