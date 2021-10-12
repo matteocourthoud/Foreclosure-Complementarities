@@ -18,7 +18,7 @@ Base.@kwdef mutable struct model
     p0::Float64 = 1.5                           # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
     cost_entry::Vector{Float64} = [0;10];       # Entry cost
-    value_exit::Vector{Float64} = [0;0.5];     # Exit scrap values
+    value_exit::Vector{Float64} = [0;0.5];      # Exit scrap values
     cost_merger::Vector{Float64} = [0;10];      # Merger cost
     entry::Bool = true                          # Entry
     exit::Bool = true                           # Exit
@@ -345,7 +345,6 @@ function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Ve
     return idx_merger
 end
 
-
 """Compute which outcomes are active in each state"""
 function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64, policy::String)::Matrix{Float64}
     active_outcomes = zeros(ms, size(outcomes,1))
@@ -353,12 +352,14 @@ function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{In
     for i=1:ms
         active_outcomes[i,:] = (sum([S[i, 1:4].>0; 1] .* outcomes', dims=1).==2)
     end
-    # No bundling policy
+    # No bundling: no limits to products combinations
     if policy != "nobundling"
         # With double ownership, only 1,2,9 are active
-        active_outcomes[:, 3:end-1] = active_outcomes[:, 3:end-1] .* (S[:,5] .!= 3)
+        active_outcomes[S[:,5] .== 3, 3:end-1] .= 0
         # With single ownership only 1,2,6,8,9 are active
-        active_outcomes[:, [3,4,5,7]] = active_outcomes[:, [3,4,5,7]] .* (S[:,5] .!= 1)
+        if policy != "limitedbundling"
+            active_outcomes[S[:,5] .== 1, [3,4,5,7]] .= 0
+        end
     end
     # Partial complementarity
     active_outcomes[:, 5:end-1] = active_outcomes[:, 5:end-1] .* gamma

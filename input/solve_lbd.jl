@@ -34,6 +34,21 @@ function export_game(game, dist::Float64, iter::Int64)
     end
 end
 
+"""Initialize prices"""
+function init_PV(game)::Tuple{Matrix{Float64}, Matrix{Float64}}
+    if game.policy == "limitedmergers"
+        filename = string("nobundling_a", Int64(floor(game.alpha*100)), "g", Int64(floor(game.gamma*100)), "s", Int64(floor(game.sigma*10)), ".json")
+        temp = init.import_game(filename)
+        P = temp.P
+        V = game.V
+        print("\nLoading alternative P and V")
+    else
+        P = update_P_BR(game, compute_W(game, game.V))
+        V = game.V
+    end
+    return P, V
+end
+
 """Correct prices for 1 firm with 1 product: equal split"""
 function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
     for row=1:size(game.S,1)
@@ -172,7 +187,7 @@ function update_p_FOC(game, W::Array{Float64,3}, row::Int64)::Vector{Float64}
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
-    not_solved = (solution.f_converged==false) || (q[end]>0.5) #|| (max(p...)>2*game.p0)
+    not_solved = (!solution.f_converged) || (q[end]>0.5) #|| (max(p...)>2*game.p0)
     if not_solved
          p = update_p_BR(game, 2 .* game.mc[row,:], row, W)
     end
@@ -207,8 +222,7 @@ function compute_PI(game, P::Matrix{Float64})::Tuple{Matrix{Float64},Matrix{Floa
     Q = E ./ (sum(E, dims=2))                           # Product demand
     D = Q * game.outcomes[:,1:4]                        # Firm demand
     PI = D .* (P .- game.mc)                            # Profits
-    bonus = 1 .+ (game.S[:,5]./3)
-    CS = 2*game.p0 .+ log.(sum(E, dims=2) .* bonus) ./ game.sigma
+    CS = 2*game.p0 .+ log.(sum(E, dims=2)) ./ game.sigma
     return Q, D, PI, CS
 end
 

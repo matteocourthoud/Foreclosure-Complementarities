@@ -2,9 +2,11 @@
 *.json
 *.csv
 *.m~
+*.DS_Store
 backup
 figures
 Notes.md
 Theory.md
-errors.txt
+issues.txt
 copyfigures.sh
+input/test.jl

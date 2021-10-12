@@ -14,16 +14,16 @@ classdef figures
         
         %policies = ["baseline", "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
         %policies = ["baseline", "nolearning", "nobundling", "datasharing", "limitedbundling"];
-        policies = ["baseline", "nolearning", "nomergers", ...
-            "datasharing", "limitedmergers",  "nobundling", ...
+        policies = ["baseline", "nolearning", "nomergers", "nobundling", ...
+            "datasharing", "limitedmergers",  "limitedbundling", ...
             "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"];
-        statlimits = [5,1,1,1,1,3,3,5,1,1,1]; % Stats min and max
-        difflimits = [5,1,1,1,1,1,1,.3,1,1,1]; % Stats min and max for differences
+        statlimits = [5,1,1,1,1,3,3,5,1,1,1,3,3,5]; % Stats min and max
+        difflimits = [5,1,1,1,1,1,1,.3,1,1,1,1,1,.3]; % Stats min and max for differences
         varnames = ["Price - Cost (short run)", "Below Cost Pricing (short run)", ...
-            "Entry Probability (short run)", "Exit Probability (short run)", ...
-            "Merger Probability (short run)", ...
-            "Total Profits (long run)", "Consumer Surplus (long run)", "Total Welfare (long run)", ...
-            "Monopoly Probability (long run)", "Monopoly Probability A (long run)", "Monopoly Probability B (long run)"];
+            "Entry Probability (short run)", "Exit Probability (short run)", "Merger Probability (short run)", ...
+            "Total Profits (NPV)", "Consumer Surplus (NPV)", "Total Welfare (NPV)", ...
+            "Monopoly Probability (long run)", "Monopoly Probability A (long run)", "Monopoly Probability B (long run)", ...
+            "Total Profits (long run)", "Consumer Surplus (long run)", "Total Welfare (long run)"];
         matketnames = ["Monopoly in A&B","B Monopoly in A&B",...
                     "mixed M/Dpoly","B mixed M/Dpoly",...
                     "Duopoly in A&B","B/2 Duopoly in A&B","B Duopoly in A&B"];
@@ -295,7 +295,7 @@ classdef figures
         % Get compstats
         function compstats = get_compstats(data, label)
             sigmas = sort(unique(data.sigma));
-            alphas = sort(unique(data.alpha));
+            alphas = sort(unique(data.alpha), 'descend');
             compstats = zeros(length(sigmas), length(alphas));
             for i=1:length(sigmas)
                 for j=1:length(alphas)
@@ -383,7 +383,7 @@ classdef figures
                     % Plot
                     figure();
                     contourf(compstats,20,'linestyle','none'); 
-                    figures.prettify_compstats(l, v1, v2, 0);
+                    figures.prettify_compstats(compstats, l, v1, v2, 0);
 
                     % Save
                     saveas(gcf, sprintf("../output/compstats/%s/%s.png", policy, labels{l}));
@@ -421,7 +421,7 @@ classdef figures
                     % Plot
                     figure();
                     contourf(relative_compstats,20,'linestyle','none'); 
-                    figures.prettify_compstats(l, v1, v2, 1);
+                    figures.prettify_compstats(relative_compstats, l, v1, v2, 1);
 
                     % Save
                     saveas(gcf, sprintf("../output/compstats/%s/diff_%s.png", policy, labels{l}));
@@ -432,7 +432,7 @@ classdef figures
         end
         
         % Prettify compstats
-        function prettify_compstats(i, v1, v2, diff)
+        function prettify_compstats(values, i, v1, v2, diff)
             
             % Set plot
             set(gca, 'OuterPosition', [0,0,1.05,0.95])
@@ -441,7 +441,9 @@ classdef figures
             if diff
                 caxis([-1, 1]*figures.difflimits(i));
             else
-                caxis([-1, 1]*figures.statlimits(i));
+                negative_min = min(min(values)) < 0;
+                positive_max = max(max(values)) > 0;
+                caxis([-negative_min, positive_max]*figures.statlimits(i));
             end
 
             % Prettify
@@ -461,7 +463,11 @@ classdef figures
             xlabel('Economies of scale: \alpha','FontWeight','bold', 'Color', [.4 .4 .4])
             
             % Title
-            t = title(figures.varnames(i), 'FontSize', 18, 'FontWeight', 'normal');
+            figtitle = figures.varnames(i);
+            if diff
+                figtitle = strcat("\Delta ", figtitle);
+            end
+            t = title(figtitle, 'FontSize', 18, 'FontWeight', 'normal');
             titlePos = get(t,'position');
             titlePos(2) = titlePos(2) * 1.05;
             set(t, 'position', titlePos);

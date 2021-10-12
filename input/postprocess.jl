@@ -171,7 +171,7 @@ function get_sumstats(game)::DataFrame
     # Fill in the summary statistics
     states = unique(game.markets)
     beta = game.beta
-    stats = zeros(length(states), 11)
+    stats = zeros(length(states), 14)
     short_run = max(game.smax...)
     long_run = 1000
     for (i,s) in enumerate(states)
@@ -185,11 +185,14 @@ function get_sumstats(game)::DataFrame
                         compute_edv(welfare, long_run, s, T, beta),
                         compute_ev(mpoly, long_run, s, T),
                         compute_ev(mpolyA, long_run, s, T),
-                        compute_ev(mpolyB, long_run, s, T)]
+                        compute_ev(mpolyB, long_run, s, T),
+                        compute_ev(profits, long_run, s, T),
+                        compute_ev(surplus, long_run, s, T),
+                        compute_ev(welfare, long_run, s, T)]
     end
 
     # Convert to dataframe
-    colnames = ["margin", "bcost", "entry", "exit", "merger", "profits", "surplus", "welfare", "mpoly", "mpolyA", "mpolyB"]
+    colnames = ["margin", "bcost", "entry", "exit", "merger", "profits", "surplus", "welfare", "mpoly", "mpolyA", "mpolyB", "profitsLR", "surplusLR", "welfareLR"]
     sumstats = DataFrame(Float16.(stats), colnames)
     insertcols!(sumstats, 1, :market => game.marketnames)
     insertcols!(sumstats, 1, :sigma => game.sigma)
