@@ -56,10 +56,10 @@ function correct_P(game, P::Matrix{Float64})::Matrix{Float64}
         mc = game.mc[row,:]
         p = P[row,:]
         # Equally split surplus in symmetric states
-        if (s[5]>0) & (game.policy != "nobundling")
+        if (s[6]>0)
             surplus = (p[1] + p[3]) - (mc[1] + mc[3])
             p[[1,3]] = surplus/2 .+ mc[[1,3]]
-            if (s[5]==3) & (game.policy != "nobundling")
+            if (s[6]>0) & (s[5]==3)
                 surplus = (p[2] + p[4]) - (mc[2] + mc[4])
                 p[[2,4]] = surplus/2 .+ mc[[2,4]]
             end
@@ -187,9 +187,10 @@ function update_p_FOC(game, W::Array{Float64,3}, row::Int64)::Vector{Float64}
     q, d = demand(p[active_n[1:4]], game.sigma, game.p0, outcomes, out)
 
     # Consider model not solved if not zero, there are nan prices or zero demand
-    not_solved = (!solution.f_converged) || (q[end]>0.5) #|| (max(p...)>2*game.p0)
+    threshold = max(1-game.sigma/10, 0.3)
+    not_solved = (!solution.f_converged) || (q[end]>threshold) #|| (max(p...)>2*game.p0)
     if not_solved
-         p = update_p_BR(game, 2 .* game.mc[row,:], row, W)
+        p = update_p_BR(game, 2 .* game.mc[row,:], row, W)
     end
 
     return p
@@ -250,35 +251,34 @@ function solve_game(game)
     end
 
     # Initialize prices to best reply prices with zero value
-    P = update_P_BR(game, compute_W(game, game.V))
+    game.P = update_P_BR(game, compute_W(game, game.V));
 
     # Solve game
-    print("\n\nSolving ", game.filename, "\n----------------------\n")
-    rate = 1
-    dist = 1
-    iter = 0
+    print("\n\nSolving ", game.filename, "\n----------------------\n");
+    dist = 1;
+    iter = 0;
     while (dist>100*game.accuracy) && (iter<1000)
-        V4, game.pr_exit = dynamics.update_V_exit(game, game.V);
-        V3, game.pr_entry = dynamics.update_V_entry(game, V4);
-        V2, game.pr_merger = dynamics.update_V_merger(game, V3);
+        V5, game.pr_exit = dynamics.update_V_exit(game, game.V);
+        V4, game.pr_entry = dynamics.update_V_entry(game, V5);
+        V3, game.pr_merger = dynamics.update_V_merger(game, V4);
+        V2, game.pr_bundling = dynamics.update_V_bundling(game, V3);
         V1, game.P, game.Q, game.D, game.PI, game.CS = update_V(game, V2);
         # Compute distance
-        #rate = 0.9*rate + 0.1*max(abs.(game.V - V1)...)/dist
         dist = max(abs.(game.V - V1)...);
         # Update value function
-        r = rand() * (iter > 400) # * (rate > 1)
-        game.V = game.V .* r + V1 .* (1-r)
+        r = rand() * (iter > 400)
+        game.V = game.V .* r + V1 .* (1-r);
         # Print update
         if iter % 10 == 0
-            print("\rIter ", iter, ": ", dist)
+            print("\rIter ", iter, ": ", dist);
         end
-        iter += 1
+        iter += 1;
     end
 
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[7:8; 12:18]], "\n\n");
+        print("\n\n", sumstats[:,[7:8; 12:17]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end

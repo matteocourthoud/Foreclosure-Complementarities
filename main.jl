@@ -18,10 +18,9 @@ precompile(solve_lbd.solve_game, (Main.init.model,))
 precompile(predatory.solve_game, (Main.init.model,))
 policies = ["baseline", "nolearning", "nomergers", "nobundling",
             "datasharing", "limitedmergers", "limitedbundling",
-            "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
+            "nopredexitpricing", "nopredexitbundling","nopredentrypricing", "nopredentrybundling"]
 
 # Delete all existing games and issues file
-[rm(f) for f in readdir() if f=="issues.txt"]
 [rm("output/games/$f") for f in readdir("output/games/") if occursin("json", f)]
 
 # Single parametrization
@@ -35,22 +34,21 @@ for sigma = [3, 7]
                 @time game_solved = solve_lbd.solve_game(game);
             end
             postprocess.compute_transitions(game_solved)
-            postprocess.compute_timelines(game_solved)
+            #postprocess.compute_timelines(game_solved)
         end
     end
 end
 
 # Generate comparative statics
+[rm(f) for f in readdir() if f=="issues.txt"]
 for policy in policies
     for sigma = 1:1:10
-        for gamma = 0.0
-            for alpha = 0.0:0.1:1.0
-                game = init.model(policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
-                if contains(game.policy, "nopred")
-                    @time game_solved = predatory.solve_game(game);
-                else
-                    @time game_solved = solve_lbd.solve_game(game);
-                end
+        for alpha = 0.0:0.1:1.0
+            game = init.model(policy=policy, alpha=alpha, sigma=sigma);
+            if contains(game.policy, "nopred")
+                @time game_solved = predatory.solve_game(game);
+            else
+                @time game_solved = solve_lbd.solve_game(game);
             end
         end
     end

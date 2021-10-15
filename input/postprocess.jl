@@ -10,12 +10,12 @@ using SparseArrays, LinearAlgebra, DataFrames, CSV
 function compute_T(game)::SparseMatrixCSC{Float64,Int64}
 
     # Set indexes and probabilities
-    idxs = (game.idx_up, game.idx_merger, game.idx_entry, game.idx_exit)
-    probs = (game.Q, game.pr_merger, game.pr_entry, game.pr_exit)
+    idxs = (game.idx_up, game.idx_bundling, game.idx_merger, game.idx_entry, game.idx_exit)
+    probs = (game.Q, game.pr_bundling, game.pr_merger, game.pr_entry, game.pr_exit)
 
     # Compute T
     T = sparse(I, game.ms, game.ms);
-    for k=1:4
+    for k=1:5
         K = size(idxs[k], 2);
         i = repeat(1:game.ms, outer=[K]);
         j = reshape(idxs[k][:,:,1], (game.ms*K));
@@ -161,6 +161,7 @@ function get_sumstats(game)::DataFrame
     entry = vec(sum(game.pr_entry, dims=2));
     exit = vec(sum(game.pr_exit, dims=2));
     merger = game.S[:,5] .> 0;
+    bundling = game.S[:,6] .> 0;
     profits = vec(sum(game.PI, dims=2));
     surplus = vec(game.CS);
     welfare = profits + surplus;
@@ -171,7 +172,7 @@ function get_sumstats(game)::DataFrame
     # Fill in the summary statistics
     states = unique(game.markets)
     beta = game.beta
-    stats = zeros(length(states), 14)
+    stats = zeros(length(states), 15)
     short_run = max(game.smax...)
     long_run = 1000
     for (i,s) in enumerate(states)
@@ -180,6 +181,7 @@ function get_sumstats(game)::DataFrame
                         compute_ecv(entry, short_run, s, T),
                         compute_ecv(exit, short_run, s, T),
                         compute_ev(merger, short_run, s, T),
+                        compute_ev(bundling, short_run, s, T),
                         compute_edv(profits, long_run, s, T, beta),
                         compute_edv(surplus, long_run, s, T, beta),
                         compute_edv(welfare, long_run, s, T, beta),
@@ -192,7 +194,7 @@ function get_sumstats(game)::DataFrame
     end
 
     # Convert to dataframe
-    colnames = ["margin", "bcost", "entry", "exit", "merger", "profits", "surplus", "welfare", "mpoly", "mpolyA", "mpolyB", "profitsLR", "surplusLR", "welfareLR"]
+    colnames = ["margin", "bcost", "entry", "exit", "merger", "bundling", "profits", "surplus", "welfare", "mpoly", "mpolyA", "mpolyB", "profitsLR", "surplusLR", "welfareLR"]
     sumstats = DataFrame(Float16.(stats), colnames)
     insertcols!(sumstats, 1, :market => game.marketnames)
     insertcols!(sumstats, 1, :sigma => game.sigma)

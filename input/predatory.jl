@@ -12,7 +12,7 @@ function compute_idx_nobundling(S::Matrix{Int8})
 
      # Compute new state, removing bundling
      s = copy(S);
-     s[:,5] .= 0;
+     s[:,6] .= 0;
 
      # Search index of new states
      idx = init.find_states(s, S);
@@ -83,12 +83,16 @@ function solve_game(game)
         end
 
         # Mergers: use different incentive value for non-predatory bundling
-        if occursin(r"nopredexitbundling|nopredentrybundling", game.policy)
-            V3, game.pr_merger = dynamics.update_V_merger(game, V4, V_noincentives);
-        else
-            V3, game.pr_merger = dynamics.update_V_merger(game, V4);
-        end
+        V3, game.pr_merger = dynamics.update_V_merger(game, V4);
         V_noincentives, _ = dynamics.update_V_merger(game, V_noincentives, V_noincentives, game.pr_merger);
+
+        # Mergers: use different incentive value for non-predatory bundling
+        if occursin(r"nopredexitbundling|nopredentrybundling", game.policy)
+            V2, game.pr_bundling = dynamics.update_V_bundling(game, V3, V_noincentives);
+        else
+            V2, game.pr_bundling = dynamics.update_V_bundling(game, V3);
+        end
+        V_noincentives, _ = dynamics.update_V_bundling(game, V_noincentives, V_noincentives, game.pr_bundling);
 
         # Pricing: use different incentive value for non-predatory pricing
         if occursin(r"nopredexitpricing|nopredentrypricing", game.policy)
@@ -114,7 +118,7 @@ function solve_game(game)
     # Print game
     if game.verbose
         sumstats = postprocess.get_sumstats(game);
-        print("\n\n", sumstats[:,[7:8; 12:18]], "\n\n");
+        print("\n\n", sumstats[:,[7:8; 12:17]], "\n\n");
         #statestats = postprocess.get_statestats(game);
         #print("\n\n", statestats[:,[3,4,6,7,9,10,11]], "\n\n");
     end
