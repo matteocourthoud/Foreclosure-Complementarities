@@ -43,12 +43,14 @@ end
 [rm(f) for f in readdir() if f=="issues.txt"]
 for policy in policies
     for sigma = 1:1:10
-        for alpha = 0.0:0.1:1.0
-            game = init.model(policy=policy, alpha=alpha, sigma=sigma);
-            if contains(game.policy, "nopred")
-                @time game_solved = predatory.solve_game(game);
-            else
-                @time game_solved = solve_lbd.solve_game(game);
+        for gamma = 0.0:1.0:1.0
+            for alpha = 0.0:0.1:1.0
+                game = init.model(policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
+                if contains(game.policy, "nopred")
+                    @time game_solved = predatory.solve_game(game);
+                else
+                    @time game_solved = solve_lbd.solve_game(game);
+                end
             end
         end
     end
