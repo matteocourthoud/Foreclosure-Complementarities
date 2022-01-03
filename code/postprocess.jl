@@ -64,7 +64,7 @@ function compute_transitions(game)
 
     # Export
     foldername = "data/transitions/$(game.modelname)/$(game.policy)/"
-    mkdir(foldername)
+    mkpath(foldername)
     CSV.write("$foldername/$(game.filename).csv", df, append=false, header=true)
 end
 
@@ -111,7 +111,7 @@ function compute_timelines(game)
 
     # Export
     foldername = "data/timeseries/$(game.policy)/$(game.modelname)/"
-    mkdir(foldername)
+    mkpath(foldername)
     CSV.write("$foldername/$(game.filename).csv", df, append=false, header=true)
 end
 
