@@ -1,12 +1,7 @@
-*.idea
-*.json
-*.csv
 *.m~
 *.DS_Store
 backup
 figures
-Notes.md
-Theory.md
-issues.txt
-copyfigures.sh
+data
+paper
 input/test.jl
