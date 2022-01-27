@@ -11,11 +11,7 @@ include("postprocess.jl")
 """Initialize prices"""
 function init_PV(game)::Tuple{Matrix{Float64}, Matrix{Float64}}
     if game.policy == "limitedmergers"
-<<<<<<< HEAD
         filename = "nomergers_a$(Int(alpha*100))g$(Int(gamma*100))s$(Int(sigma*10)).json"
-=======
-        filename = string("nobundling_a", Int(floor(game.alpha*100)), "g", Int(floor(game.gamma*100)), "s", Int(floor(game.sigma*10)), ".json")
->>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
         temp = init.import_game(filename)
         P = temp.P
         V = game.V
