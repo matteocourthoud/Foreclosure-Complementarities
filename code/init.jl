@@ -222,7 +222,11 @@ end
 function compute_idx_entry(S::Matrix{Int}, ms::Int, entry::Bool)::Array{Int,3}
 
     # Init map. Dimensions: states x entrant x firms
+<<<<<<< HEAD
     idx_entry = zeros(Int, ms, 4, 4)
+=======
+    idx_entry = Int.(zeros(ms, 4, 4));
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Loop over entrants
     for e=1:4
@@ -254,7 +258,11 @@ end
 function compute_idx_exit(S::Matrix{Int}, ms::Int, exit::Bool, rival::Vector{Int}, ownership::Matrix{Int})::Array{Int,3}
 
     # Init map. Dimensions: states x exiters x firms
+<<<<<<< HEAD
     idx_exit = zeros(Int, ms, 4, 4);
+=======
+    idx_exit = Int.(zeros(ms, 4, 4));
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Loop over exiters
     for e=1:4
@@ -306,7 +314,11 @@ end
 function compute_idx_merger(S::Matrix{Int}, ms::Int, mergers::Bool, rival::Vector{Int}, merger_pairs::Matrix{Int}, policy::String)::Array{Int,3}
 
     # Init map. Dimensions: states x merger pairs x firms
+<<<<<<< HEAD
     idx_merger = zeros(Int, ms, 4, 4);
+=======
+    idx_merger = Int.(zeros(ms, 4, 4));
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Loop over merger pairs
     for p=1:4
@@ -363,7 +375,11 @@ end
 function compute_idx_bundling(S::Matrix{Int}, ms::Int, bundling::Bool, policy::String)::Array{Int,3}
 
     # Init map. Dimensions: states x entrant x firms
+<<<<<<< HEAD
     idx_bundling = zeros(Int, ms, 4, 4);
+=======
+    idx_bundling = Int.(zeros(ms, 4, 4));
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Loop over bundlers?
     for b=1:4

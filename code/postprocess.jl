@@ -7,7 +7,11 @@ include("init.jl")
 using SparseArrays, LinearAlgebra, DataFrames, CSV
 
 """Compute transition probabilities"""
+<<<<<<< HEAD
 function compute_T(game)
+=======
+function compute_T(game)::SparseMatrixCSC{Float64,Int}
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Set indexes and probabilities
     idxs = (game.idx_up, game.idx_bundling, game.idx_merger, game.idx_entry, game.idx_exit)
@@ -116,7 +120,11 @@ function compute_timelines(game)
 end
 
 """Compute expected discounted value of variable over t periods"""
+<<<<<<< HEAD
 function compute_edv(v, t::Int, s::Int, T, beta::Float64)::Float64
+=======
+function compute_edv(v, t, s::Int, T::SparseMatrixCSC{Float64,Int}, beta::Float64)::Float64
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
     exp_values = zeros(t)
     distr_t = zeros(Float64, 1, size(T,1))
     distr_t[s] = 1
@@ -130,7 +138,11 @@ function compute_edv(v, t::Int, s::Int, T, beta::Float64)::Float64
 end
 
 """Compute expected cumulative value of variable over t periods"""
+<<<<<<< HEAD
 function compute_ecv(v, t::Int, s::Int, T)::Float64
+=======
+function compute_ecv(v, t, s::Int, T::SparseMatrixCSC{Float64,Int})::Float64
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
     exp_values = zeros(t)
     distr_t = zeros(Float64, 1, size(T,1))
     distr_t[s] = 1
@@ -143,8 +155,13 @@ function compute_ecv(v, t::Int, s::Int, T)::Float64
 end
 
 """Compute expected value of variable in period t"""
+<<<<<<< HEAD
 function compute_ev(v, t::Int, s::Int, T)::Float64
     distr_t = zeros(Float64, 1, size(T,1))
+=======
+function compute_ev(v, t, s::Int, T::SparseMatrixCSC{Float64,Int})::Float64
+    distr_t = zeros(1, size(T,1))
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
     distr_t[s] = 1
     for i=1:t
         distr_t *= T
@@ -230,6 +247,13 @@ end
 
 """Generate summary statistics"""
 function compute_sumstats()
+<<<<<<< HEAD
+=======
+    # Precompile stuff
+    precompile(init.import_game, (String,))
+    precompile(compute_T, (Main.init.model,))
+    precompile(get_sumstats, (Main.init.model, SparseMatrixCSC{Float64,Int}))
+>>>>>>> a96106de1ae21e5a3b070a783455adb742e3b149
 
     # Import and save
     filenames = get_all_files([], "data/games", ".json")
