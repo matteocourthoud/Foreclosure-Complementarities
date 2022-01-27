@@ -10,7 +10,7 @@ include("dynamics.jl")
 include("postprocess.jl")
 
 """Export game"""
-function export_game(game, dist::Float64, iter::Int64)
+function export_game(game, dist::Float64, iter::Int)
     # Export
     foldername = "data/games/$(game.modelname)/$(game.policy)/"
     mkpath(foldername)
@@ -101,7 +101,7 @@ function solve_game(game)
 end
 
 """Compute index without bundling"""
-function compute_idx_nobundling(S::Matrix{Int8})
+function compute_idx_nobundling(S::Matrix{Int})
 
      # Compute new state, removing bundling
      s = copy(S);
@@ -113,7 +113,7 @@ function compute_idx_nobundling(S::Matrix{Int8})
 end
 
 """Compute index without learning"""
-function compute_idx_nolearning(S::Matrix{Int8}, smax)
+function compute_idx_nolearning(S::Matrix{Int}, smax)
 
      # Compute new state, removing bundling
      s = copy(S);
@@ -226,7 +226,7 @@ function replicate(alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vec
                     end
 
                     # Add details if special game
-                    if (sigma in sigmas[[2, end-2]]) & (alpha in alphas[[2, end-2]]) & (gamma == 0.0)
+                    if (sigma in sigmas[[2, end-2]]) && (alpha in alphas[[2, end-2]]) && (gamma == 0.0)
                         postprocess.compute_transitions(game_solved)
                         #postprocess.compute_timelines(game_solved)
                     end

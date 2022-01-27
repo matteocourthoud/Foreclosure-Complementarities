@@ -19,11 +19,11 @@ end
 function update_V_exit(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64},Matrix{Float64}}
 
     # Init
-    V_exit = Float64.(zeros(size(V)));
-    pr_exit = Float64.(zeros(size(game.pr_exit)));
+    V_exit = zeros(size(V));
+    pr_exit = zeros(size(game.pr_exit));
 
     # Return if no exit
-    if game.exit == false
+    if !game.exit
         return V, pr_exit
     end
 
@@ -74,11 +74,11 @@ end
 function update_V_entry(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64},Matrix{Float64}}
 
     # Init value
-    V_entry = Float64.(zeros(size(V)));
-    pr_entry = Float64.(zeros(size(game.pr_entry)));
+    V_entry = zeros(size(V));
+    pr_entry = zeros(size(game.pr_entry));
 
     # Return if no entry
-    if game.entry == false
+    if !game.entry
         return V, pr_entry
     end
 
@@ -116,11 +116,11 @@ function update_V_entry(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64
 end
 
 """Update value for mergers"""
-function update_V_merger(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64},Matrix{Float64}}
+function update_V_merger(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64}, Matrix{Float64}}
 
     # Init
-    V_merger = Float64.(zeros(size(V)));
-    pr_merger = Float64.(zeros(size(game.pr_merger)));
+    V_merger = zeros(size(V));
+    pr_merger = zeros(size(game.pr_merger));
 
     # Return if no mergers
     if game.mergers == false
@@ -156,8 +156,8 @@ end
 function update_V_bundling(game, V::Matrix{Float64}, args...)::Tuple{Matrix{Float64},Matrix{Float64}}
 
     # Init
-    V_bundling = Float64.(zeros(size(V)));
-    pr_bundling= Float64.(zeros(size(game.pr_bundling)));
+    V_bundling = zeros(size(V));
+    pr_bundling= zeros(size(game.pr_bundling));
 
     # Return if no bundling
     if game.bundling == false
