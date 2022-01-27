@@ -10,7 +10,7 @@ Base.@kwdef mutable struct model
     """Default Properties"""
     modelname::String = "lbd"                   # Model
     policy::String = "baseline"                 # Name of policy
-    smax::Vector{Int8} = Int8[5,1]              # Number of states per side of the market
+    smax::Vector{Int} = [5,1]                   # Number of states per side of the market
     alpha::Float64 = 0.8                        # Learning parameter
     beta::Float64 = 0.95                        # Discount factor
     c::Float64 = 1.0                            # Marginal cost
@@ -26,32 +26,32 @@ Base.@kwdef mutable struct model
     exit::Bool = true                           # Exit
     mergers::Bool = (policy != "nomergers")     # Mergers
     bundling::Bool = (policy != "nobundling")   # Bundling
-    filename::String = string("a", Int64(floor(alpha*100)), "g", Int64(floor(gamma*100)), "s", Int64(floor(sigma*10)))
+    filename::String = "a$(Int(alpha*100))g$(Int(gamma*100))s$(Int(sigma*10))"
     verbose::Bool = true
 
     """Precomputed stuff to speed up computation"""
-    firms::Vector{Int8} = Int8[1, 2, 3, 4]      # Firms, sigma=5.0
-    rival::Vector{Int8} = Int8[2, 1, 4, 3]      # Rivals
-    partner::Vector{Int8} = Int8[3, 4, 1, 2]    # Partners
-    merger_pairs::Matrix{Int8} = Int8[1 3; 2 4; 1 4; 2 3]; # Merger pairs
-    outcomes::Matrix{Int8} = Int8[1 0 1 0 0
-                                  0 1 0 1 0
-                                  1 0 0 1 0
-                                  0 1 1 0 0
-                                  1 0 0 0 1
-                                  0 1 0 0 1
-                                  0 0 1 0 1
-                                  0 0 0 1 1
-                                  0 0 0 0 2]    # Sale outcomes
+    firms::Vector{Int} = [1, 2, 3, 4]           # Firms, sigma=5.0
+    rival::Vector{Int} = [2, 1, 4, 3]      # Rivals
+    partner::Vector{Int} = [3, 4, 1, 2]    # Partners
+    merger_pairs::Matrix{Int} = [1 3; 2 4; 1 4; 2 3]; # Merger pairs
+    outcomes::Matrix{Int} = [1 0 1 0 0
+                             0 1 0 1 0
+                             1 0 0 1 0
+                             0 1 1 0 0
+                             1 0 0 0 1
+                             0 1 0 0 1
+                             0 0 1 0 1
+                             0 0 0 1 1
+                             0 0 0 0 2]    # Sale outcomes
 
-    ownership::Matrix{Int8} = Int8[0 0 0 0
-                                   3 0 1 0
-                                   0 4 0 2
-                                   3 4 1 2]     # Ownership matrix
+    ownership::Matrix{Int} = [0 0 0 0
+                              3 0 1 0
+                              0 4 0 2
+                              3 4 1 2]     # Ownership matrix
 
     """Derived Properties"""
-    S::Matrix{Int8} = get_state_space(smax, policy) # State space
-    ms::Int64 = size(S,1)                       # Dimension of the state space
+    S::Matrix{Int} = get_state_space(smax, policy) # State space
+    ms::Int = size(S,1)                       # Dimension of the state space
     mc::Matrix{Float64} = compute_mc(S, alpha, c, smax, policy) # Marginal cost
     P::Matrix{Float64} = 2 .* mc                # Prices
     V::Matrix{Float64} = zeros(ms,4)            # Value function
@@ -65,13 +65,13 @@ Base.@kwdef mutable struct model
     pr_bundling::Matrix{Float64} = zeros(ms,4)  # Probability of bundling
     active_firms::BitMatrix = Bool.([S[:,1:4] .> 0 ones(ms, 1)])
     active_outcomes::Matrix{Float64} = compute_active_outcomes(S, ms, outcomes, gamma, policy)
-    markets::Vector{Int64} = compute_markets(S, ms)
+    markets::Vector{Int} = compute_markets(S, ms)
     marketnames::Vector{String} = compute_marketnames(S)
-    idx_up::Array{Int64,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
-    idx_entry::Array{Int64,3} = compute_idx_entry(S, ms, entry)
-    idx_exit::Array{Int64,3} = compute_idx_exit(S, ms, exit, rival, ownership)
-    idx_merger::Array{Int64,3} = compute_idx_merger(S, ms, mergers, rival, merger_pairs, policy)
-    idx_bundling::Array{Int64,3} = compute_idx_bundling(S, ms, bundling, policy)
+    idx_up::Array{Int,3} = compute_idx_up(S, ms, smax, outcomes, active_outcomes, policy)
+    idx_entry::Array{Int,3} = compute_idx_entry(S, ms, entry)
+    idx_exit::Array{Int,3} = compute_idx_exit(S, ms, exit, rival, ownership)
+    idx_merger::Array{Int,3} = compute_idx_merger(S, ms, mergers, rival, merger_pairs, policy)
+    idx_bundling::Array{Int,3} = compute_idx_bundling(S, ms, bundling, policy)
 
 end
 
@@ -79,8 +79,8 @@ end
 StructTypes.StructType(::Type{model}) = StructTypes.Mutable()
 
 """Get actions of the platform: order of firms"""
-function get_state_space(smax::Vector{Int8}, policy::String)::Matrix{Int8}
-    S = Int8.(zeros(0,6))
+function get_state_space(smax::Vector{Int}, policy::String)::Matrix{Int}
+    S = Int.(zeros(0,6))
     i1max = (policy == "nolearning") ? 1 : smax[1]
     i3max = (policy == "nolearning") ? 1 : smax[2]
     O = (policy == "nomergers") ? [0] : [0,1,3]
@@ -116,17 +116,17 @@ function get_state_space(smax::Vector{Int8}, policy::String)::Matrix{Int8}
 end
 
 """Find index of a single state"""
-function find_state(s::Vector{Int8}, S::Matrix{Int8})::Vector{Int64}
+function find_state(s::Vector{Int}, S::Matrix{Int})::Vector{Int}
     row_index = findall(all(reshape(s, (1,6)) .== S, dims=2))[1][1]
     row_indexes = LinearIndices(S)[row_index, 1:4]
     return row_indexes
 end
 
 """Find index of a set of states"""
-function find_states(states::Matrix{Int8}, S::Matrix{Int8})::Matrix{Int64}
+function find_states(states::Matrix{Int}, S::Matrix{Int})::Matrix{Int}
 
     # Init
-    indexes = Int64.(zeros(size(states,1),4));
+    indexes = zeros(Int, size(states,1),4);
 
     # Loop over states
     for i=1:size(states,1)
@@ -171,7 +171,7 @@ function find_states(states::Matrix{Int8}, S::Matrix{Int8})::Matrix{Int64}
 end
 
 """Compute marginal cost"""
-function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Vector{Int8}, policy::String)::Matrix{Float64}
+function compute_mc(S::Matrix{Int}, alpha::Float64, c::Float64, smax::Vector{Int}, policy::String)::Matrix{Float64}
     mc = c .* S[:,1:4].^log2(1-alpha);
     if (policy == "nolearning")
         mc[:,1:2] =  c .* (S[:,1:2] .* smax[1]).^log2(1-alpha);
@@ -182,11 +182,11 @@ function compute_mc(S::Matrix{Int8}, alpha::Float64, c::Float64, smax::Vector{In
 end
 
 """Compute index when making a sale"""
-function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes::Matrix{Int8}, active_outcomes::Matrix{Float64}, policy::String)::Array{Int64, 3}
+function compute_idx_up(S::Matrix{Int}, ms::Int, smax::Vector{Int}, outcomes::Matrix{Int}, active_outcomes::Matrix{Float64}, policy::String)::Array{Int, 3}
 
     # Init I_up: state x product x firm
     K = size(outcomes,1)
-    idx_up = Int64.(ones(ms, K, 4))
+    idx_up = Int.(ones(ms, K, 4))
 
     # Init maximum achievable state
     Sfirms = S[:,1:4];
@@ -198,7 +198,7 @@ function compute_idx_up(S::Matrix{Int8}, ms::Int64, smax::Vector{Int8}, outcomes
         out = outcomes[k,1:4];
         active_out = active_outcomes[:,k] .> 0;
         up = (Sfirms.<Smax) .* reshape(out, (1,4)) .* active_out;
-        S2 = Int8.([Sfirms + up S[:, 5:end]])
+        S2 = Int.([Sfirms + up S[:, 5:end]])
 
         # Data sharing: follower is never more than one step behind
         if (policy == "datasharing")
@@ -219,10 +219,10 @@ end
 
 """Compute entry index: in each state, to which state would each
    firm move to, for each possible firm entry?"""
-function compute_idx_entry(S::Matrix{Int8}, ms::Int64, entry::Bool)::Array{Int64,3}
+function compute_idx_entry(S::Matrix{Int}, ms::Int, entry::Bool)::Array{Int,3}
 
     # Init map. Dimensions: states x entrant x firms
-    idx_entry = Int64.(zeros(ms, 4, 4));
+    idx_entry = Int.(zeros(ms, 4, 4));
 
     # Loop over entrants
     for e=1:4
@@ -251,10 +251,10 @@ end
 
 """Compute exit index: in each state, to which state would each
    firm move to, for each possible firm entry?"""
-function compute_idx_exit(S::Matrix{Int8}, ms::Int64, exit::Bool, rival::Vector{Int8}, ownership::Matrix{Int8})::Array{Int64,3}
+function compute_idx_exit(S::Matrix{Int}, ms::Int, exit::Bool, rival::Vector{Int}, ownership::Matrix{Int})::Array{Int,3}
 
     # Init map. Dimensions: states x exiters x firms
-    idx_exit = Int64.(zeros(ms, 4, 4));
+    idx_exit = Int.(zeros(ms, 4, 4));
 
     # Loop over exiters
     for e=1:4
@@ -303,10 +303,10 @@ end
 
 """Compute merger index: in each state, to which state would each
    firm move to, for each possible merger?"""
-function compute_idx_merger(S::Matrix{Int8}, ms::Int64, mergers::Bool, rival::Vector{Int8}, merger_pairs::Matrix{Int8}, policy::String)::Array{Int64,3}
+function compute_idx_merger(S::Matrix{Int}, ms::Int, mergers::Bool, rival::Vector{Int}, merger_pairs::Matrix{Int}, policy::String)::Array{Int,3}
 
     # Init map. Dimensions: states x merger pairs x firms
-    idx_merger = Int64.(zeros(ms, 4, 4));
+    idx_merger = Int.(zeros(ms, 4, 4));
 
     # Loop over merger pairs
     for p=1:4
@@ -360,10 +360,10 @@ end
 
 """Compute bundling index: in each state, to which state would each
    firm move to, after bundling?"""
-function compute_idx_bundling(S::Matrix{Int8}, ms::Int64, bundling::Bool, policy::String)::Array{Int64,3}
+function compute_idx_bundling(S::Matrix{Int}, ms::Int, bundling::Bool, policy::String)::Array{Int,3}
 
     # Init map. Dimensions: states x entrant x firms
-    idx_bundling = Int64.(zeros(ms, 4, 4));
+    idx_bundling = Int.(zeros(ms, 4, 4));
 
     # Loop over bundlers?
     for b=1:4
@@ -395,7 +395,7 @@ function compute_idx_bundling(S::Matrix{Int8}, ms::Int64, bundling::Bool, policy
 end
 
 """Compute which outcomes are active in each state"""
-function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{Int8}, gamma::Float64, policy::String)::Matrix{Float64}
+function compute_active_outcomes(S::Matrix{Int}, ms::Int, outcomes::Matrix{Int}, gamma::Float64, policy::String)::Matrix{Float64}
     active_outcomes = zeros(ms, size(outcomes,1))
     # Both firms must be active
     for i=1:ms
@@ -409,14 +409,14 @@ function compute_active_outcomes(S::Matrix{Int8}, ms::Int64, outcomes::Matrix{In
 end
 
 """Compute markets"""
-function compute_markets(S::Matrix{Int8}, ms::Int64)::Vector{Int64}
+function compute_markets(S::Matrix{Int}, ms::Int)::Vector{Int}
     marketstates = [sum(S[:,1:4].>0, dims=2) S[:,5:end]];
     markets = [findfirst(all(marketstates.==marketstates[row,:]', dims=2))[1] for row in 1:ms]
     return markets
 end
 
 """Compute market names"""
-function compute_marketnames(S::Matrix{Int8})::Vector{String}
+function compute_marketnames(S::Matrix{Int})::Vector{String}
     marketstates = [sum(S[:,1:4].>0, dims=2) S[:,5:end]];
     uniquemarkets = unique(marketstates, dims=1)
     marketnames = [join(string.(uniquemarkets[row,:])) for row in 1:size(uniquemarkets,1)]

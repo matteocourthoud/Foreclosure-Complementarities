@@ -7,7 +7,7 @@ include("init.jl")
 using SparseArrays, LinearAlgebra, DataFrames, CSV
 
 """Compute transition probabilities"""
-function compute_T(game)::SparseMatrixCSC{Float64,Int64}
+function compute_T(game)::SparseMatrixCSC{Float64,Int}
 
     # Set indexes and probabilities
     idxs = (game.idx_up, game.idx_bundling, game.idx_merger, game.idx_entry, game.idx_exit)
@@ -90,8 +90,8 @@ function compute_timelines(game)
     smax1 = contains(game.policy, "nolearning") ? 1 : game.smax[1]
     smax2 = contains(game.policy, "nolearning") ? 1 : game.smax[2]
     omax = contains(game.policy, "nomergers") ? 0 : 1
-    collusive_s = Int8.([smax1 0 smax2 0 omax])
-    competitive_s = Int8.([smax1 smax1 smax2 smax2 omax])
+    collusive_s = Int.([smax1 0 smax2 0 omax])
+    competitive_s = Int.([smax1 smax1 smax2 smax2 omax])
     for s in [collusive_s, competitive_s]
         s_index = init.find_states(s, game.S)[1]
         append!(df, DataFrame([s_index 0 reshape(V[s_index,:], (1,4))], colnames))
@@ -116,7 +116,7 @@ function compute_timelines(game)
 end
 
 """Compute expected discounted value of variable over t periods"""
-function compute_edv(v, t, s::Int64, T::SparseMatrixCSC{Float64,Int64}, beta::Float64)::Float64
+function compute_edv(v, t, s::Int, T::SparseMatrixCSC{Float64,Int}, beta::Float64)::Float64
     exp_values = zeros(t)
     distr_t = zeros(1, size(T,1))
     distr_t[s] = 1
@@ -130,7 +130,7 @@ function compute_edv(v, t, s::Int64, T::SparseMatrixCSC{Float64,Int64}, beta::Fl
 end
 
 """Compute expected cumulative value of variable over t periods"""
-function compute_ecv(v, t, s::Int64, T::SparseMatrixCSC{Float64,Int64})::Float64
+function compute_ecv(v, t, s::Int, T::SparseMatrixCSC{Float64,Int})::Float64
     exp_values = zeros(t)
     distr_t = zeros(1, size(T,1))
     distr_t[s] = 1
@@ -143,7 +143,7 @@ function compute_ecv(v, t, s::Int64, T::SparseMatrixCSC{Float64,Int64})::Float64
 end
 
 """Compute expected value of variable in period t"""
-function compute_ev(v, t, s::Int64, T::SparseMatrixCSC{Float64,Int64})::Float64
+function compute_ev(v, t, s::Int, T::SparseMatrixCSC{Float64,Int})::Float64
     distr_t = zeros(1, size(T,1))
     distr_t[s] = 1
     for i=1:t
@@ -233,7 +233,7 @@ function compute_sumstats()
     # Precompile stuff
     precompile(init.import_game, (String,))
     precompile(compute_T, (Main.init.model,))
-    precompile(get_sumstats, (Main.init.model, SparseMatrixCSC{Float64,Int64}))
+    precompile(get_sumstats, (Main.init.model, SparseMatrixCSC{Float64,Int}))
 
     # Import and save
     filenames = get_all_files([], "data/games", ".json")

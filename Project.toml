@@ -1,0 +1,12 @@
+name = "ForeclosureComplementarities"
+authors = ["Matteo Courthoud <matteo.courthoud@econ.euzh.ch>"]
+version = "1.0.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"

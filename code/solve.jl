@@ -10,7 +10,7 @@ include("dynamics.jl")
 include("postprocess.jl")
 
 """Export game"""
-function export_game(game, dist::Float64, iter::Int64)
+function export_game(game, dist::Float64, iter::Int)
     # Export
     foldername = "data/games/$(game.modelname)/$(game.policy)/"
     mkpath(foldername)
@@ -101,7 +101,7 @@ function solve_game(game)
 end
 
 """Compute index without bundling"""
-function compute_idx_nobundling(S::Matrix{Int8})
+function compute_idx_nobundling(S::Matrix{Int})
 
      # Compute new state, removing bundling
      s = copy(S);
@@ -113,7 +113,7 @@ function compute_idx_nobundling(S::Matrix{Int8})
 end
 
 """Compute index without learning"""
-function compute_idx_nolearning(S::Matrix{Int8}, smax)
+function compute_idx_nolearning(S::Matrix{Int}, smax)
 
      # Compute new state, removing bundling
      s = copy(S);
