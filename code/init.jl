@@ -31,8 +31,8 @@ Base.@kwdef mutable struct model
 
     """Precomputed stuff to speed up computation"""
     firms::Vector{Int} = [1, 2, 3, 4]           # Firms, sigma=5.0
-    rival::Vector{Int} = [2, 1, 4, 3]      # Rivals
-    partner::Vector{Int} = [3, 4, 1, 2]    # Partners
+    rival::Vector{Int} = [2, 1, 4, 3]           # Rivals
+    partner::Vector{Int} = [3, 4, 1, 2]         # Partners
     merger_pairs::Matrix{Int} = [1 3; 2 4; 1 4; 2 3]; # Merger pairs
     outcomes::Matrix{Int} = [1 0 1 0 0
                              0 1 0 1 0
@@ -42,17 +42,18 @@ Base.@kwdef mutable struct model
                              0 1 0 0 1
                              0 0 1 0 1
                              0 0 0 1 1
-                             0 0 0 0 2]    # Sale outcomes
+                             0 0 0 0 2]         # Sale outcomes
 
     ownership::Matrix{Int} = [0 0 0 0
                               3 0 1 0
                               0 4 0 2
-                              3 4 1 2]     # Ownership matrix
+                              3 4 1 2]          # Ownership matrix
 
     """Derived Properties"""
     S::Matrix{Int} = get_state_space(smax, policy) # State space
-    ms::Int = size(S,1)                       # Dimension of the state space
+    ms::Int = size(S,1)                         # Dimension of the state space
     mc::Matrix{Float64} = compute_mc(S, alpha, c, smax, policy) # Marginal cost
+    db::Matrix{Float64} = 1 .- mc # Marginal cost
     P::Matrix{Float64} = 2 .* mc                # Prices
     V::Matrix{Float64} = zeros(ms,4)            # Value function
     D::Matrix{Float64} = zeros(ms,4)            # Demand (per firm)
@@ -80,7 +81,7 @@ StructTypes.StructType(::Type{model}) = StructTypes.Mutable()
 
 """Get actions of the platform: order of firms"""
 function get_state_space(smax::Vector{Int}, policy::String)::Matrix{Int}
-    S = Int.(zeros(0,6))
+    S = zeros(Int, 0, 6)
     i1max = (policy == "nolearning") ? 1 : smax[1]
     i3max = (policy == "nolearning") ? 1 : smax[2]
     O = (policy == "nomergers") ? [0] : [0,1,3]
@@ -172,13 +173,22 @@ end
 
 """Compute marginal cost"""
 function compute_mc(S::Matrix{Int}, alpha::Float64, c::Float64, smax::Vector{Int}, policy::String)::Matrix{Float64}
-    mc = c .* S[:,1:4].^log2(1-alpha);
+    mc = c * S[:,1:4].^log2(1-alpha);
     if (policy == "nolearning")
-        mc[:,1:2] =  c .* (S[:,1:2] .* smax[1]).^log2(1-alpha);
-        mc[:,3:4] =  c .* (S[:,3:4] .* smax[2]).^log2(1-alpha);
+        mc =  c * (S[:,1:4] .* smax[[1 1 2 2]]).^log2(1-alpha);
     end
     mc[S[:,1:4].==0] .= 0
     return mc
+end
+
+"""Compute demand boost"""
+function compute_db(S::Matrix{Int}, alpha::Float64, c::Float64, smax::Vector{Int}, policy::String)::Matrix{Float64}
+    db = (S[:,1:4] - (S[:,1:4].>0)).^alpha;
+    if (policy == "nolearning")
+        db = (S[:,1:4] .* smax[[1 1 2 2]]).^alpha;
+    end
+    db[S[:,1:4].==0] .= 0
+    return db
 end
 
 """Compute index when making a sale"""

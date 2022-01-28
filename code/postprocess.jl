@@ -215,12 +215,14 @@ function get_sumstats(game)::DataFrame
     return sumstats
 end
 
-"""Get all files"""
-function get_all_files(files, dir, pattern)
+"""Get all files of a certain format"""
+function get_all_files(dir, pattern)
+    mkpath(dir)
+    files = []
     content = readdir(dir)
     for c in content
         if isdir("$dir/$c")
-            files = [files; get_all_files(files, "$dir/$c", pattern)]
+            files = [files; get_all_files("$dir/$c", pattern)]
         elseif occursin(pattern, "$dir/$c")
             files = [files; "$dir/$c"]
         end
@@ -229,10 +231,10 @@ function get_all_files(files, dir, pattern)
 end
 
 """Generate summary statistics"""
-function compute_sumstats()
+function compute_sumstats(model)
 
     # Import and save
-    filenames = get_all_files([], "data/games", ".json")
+    filenames = get_all_files("data/games/$model", ".json")
     for filename in filenames
         print("\n\n", filename);
         game = init.import_game(filename)
@@ -240,7 +242,7 @@ function compute_sumstats()
         print("\n", sumstats[:,[7:8; 12:18]], "\n\n");
 
         # Save file
-        foldername = "data/sumstats/$(game.modelname)/"
+        foldername = "data/sumstats/$model/"
         mkpath(foldername)
         filename = "$(game.policy).csv"
         file_exists = filename in readdir(foldername)

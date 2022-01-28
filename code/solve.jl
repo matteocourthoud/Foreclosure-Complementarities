@@ -6,6 +6,7 @@ using JSON3
 
 include("init.jl")
 include("model_lbd.jl")
+include("model_privacy.jl")
 include("dynamics.jl")
 include("postprocess.jl")
 
@@ -48,6 +49,8 @@ end
 
 """Update V"""
 function update_V(game, V1, iter)
+    @assert !any(isnan.(game.V))
+
     # Compute distance
     dist = max(abs.(game.V - V1)...);
     # Update value function
@@ -76,10 +79,16 @@ function solve_game(game)
     # game = load_game(game)
 
     # Initialize prices to best reply prices with zero value #TODO: compute_W
-    game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
+    if game.modelname == "lbd"
+        game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
+    elseif game.modelname == "privacy"
+        game.P = game.db ./ 2
+        game.P = model_privacy.update_P_BR(game, model_privacy.compute_W(game, game.V));
+    end
+
 
     # Solve game
-    print("\n\nSolving ", game.filename, "\n----------------------\n");
+    print("\n\nSolving $(game.modelname) $(game.filename)\n----------------------\n");
     dist = 1;
     iter = 0;
     while (dist>100*game.accuracy) && (iter<1000)
@@ -131,7 +140,7 @@ function solve_game_predatory(game)
     # game = load_game(game)
 
     # Solve game
-    print("\n\nSolving ", game.filename, "\n----------------------\n")
+    print("\n\nSolving $(game.modelname) $(game.filename)\n----------------------\n")
 
     # Make indexes
     idx_nolearning = compute_idx_nolearning(game.S, game.smax)
@@ -141,7 +150,13 @@ function solve_game_predatory(game)
     V_noincentives = game.V
 
     # Initialize prices to best reply prices with zero value #TODO: compute_W
-    game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V))
+    if game.modelname == "lbd"
+        game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
+    elseif game.modelname == "privacy"
+        game.P = game.db ./ 2
+        game.P = model_privacy.update_P_BR(game, model_privacy.compute_W(game, game.V));
+    end
+
 
     # Iterate until convergence
     dist = 1
@@ -201,13 +216,10 @@ function solve_game_predatory(game)
 end
 
 """Replicate alll results"""
-function replicate(alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vector{String})
+function replicate(model::String, alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vector{String})
 
     # Delete all existing games and issues file
-    mkpath("data/games/")
-    [rm("data/games/$f") for f in readdir("data/games/") if occursin("json", f)]
-    [rm(f) for f in readdir() if f=="issues.txt"]
-
+    [rm(f) for f in postprocess.get_all_files("data/games/$model/", ".json")]
 
     # Loop over all policies and parameters
     for policy in policies
@@ -216,7 +228,7 @@ function replicate(alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vec
                 for alpha in alphas
 
                     # Initialize game
-                    game = init.model(policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
+                    game = init.model(modelname=model, policy=policy, alpha=alpha, gamma=gamma, sigma=sigma);
 
                     # Solve game
                     if contains(game.policy, "nopred")
@@ -237,9 +249,8 @@ function replicate(alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vec
     end
 
     # Compute statistics
-    mkpath("data/sumstats/")
-    [rm("data/sumstats/$f") for f in readdir("data/sumstats/") if occursin("csv", f)]
-    postprocess.compute_sumstats();
+    [rm(f) for f in postprocess.get_all_files("data/sumstats/$model/", ".csv")]
+    postprocess.compute_sumstats(model);
 end
 
 end

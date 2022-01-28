@@ -83,7 +83,7 @@ end
 """Compute profits for BR iteration"""
 function BR(x::Vector{Float64}, n::Int, p::Vector{Float64}, sigma::Float64, p0::Float64, mc::Vector{Float64}, outcomes, partner::Vector{Int}, w, out)::Float64
     p[n] = x[1]                                         # Insert price of firm n
-    q, d = demand(p, sigma, p0, outcomes, out)# Compute demand
+    q, d = demand(p, sigma, p0, outcomes, out)          # Compute demand
     V = (p .- mc) .* d + sum(w .* q, dims=2)            # Compute value
     V[n] += (partner[n] > 0) ? V[partner[n]] : 0        # Correct for ownership
     return V[n]
