@@ -9,7 +9,7 @@ include("code/solve.jl")
 # Parameters
 model = "privacy"
 alphas = collect(0.0:0.1:1.0)
-gammas = collect(0.0:0.0:0.0)
+gammas = collect(0.0:0.1:0.0)
 sigmas = collect(1.0:1.0:10.0)
 policies = ["baseline",
             "nolearning",
