@@ -14,6 +14,7 @@ classdef figures
         
         %policies = ["baseline", "nopredentrypricing", "nopredexitpricing", "nopredentrybundling", "nopredexitbundling"]
         %policies = ["baseline", "nolearning", "nobundling", "datasharing", "limitedbundling"];
+        model = "privacy";
         policies = ["baseline", "nolearning", "nomergers", "nobundling", ...
             "datasharing", "limitedmergers",  "limitedbundling", ...
             "nopredexitpricing", "nopredexitbundling", "nopredentrypricing", "nopredentrybundling"];
@@ -32,7 +33,7 @@ classdef figures
         beta = 0.95;
         c = 1;
         gamma = 0;
-        p0 = 1.5;
+        p0 = 1;
     end
     
     % Methods
@@ -368,7 +369,7 @@ classdef figures
                 pause(2);
                 
                 % Import data
-                data = readtable(sprintf("../output/sumstats/%s.csv", policy));
+                data = readtable(sprintf("../output/sumstats/%s/%s.csv", figures.model, policy));
                 v1 = unique(data.sigma);
                 v2 = unique(data.alpha);
 
@@ -387,7 +388,8 @@ classdef figures
                     figures.prettify_compstats(compstats, l, v1, v2, 0);
 
                     % Save
-                    saveas(gcf, sprintf("../output/compstats/%s/%s.png", policy, labels{l}));
+                    mkdir(sprintf("../output/compstats/%s/%s/", figures.model, policy))
+                    saveas(gcf, sprintf("../output/compstats/%s/%s/%s.png", figures.model, policy, labels{l}));
                     close;
                 end
             end
@@ -403,10 +405,10 @@ classdef figures
                 pause(2);
                 
                 % Import data
-                data = readtable(sprintf("../output/sumstats/%s.csv", policy));
+                data = readtable(sprintf("../output/sumstats/%s/%s.csv", figures.model, policy));
                 v1 = unique(data.sigma);
                 v2 = unique(data.alpha);
-                baseline_data = readtable("../output/sumstats/baseline.csv");
+                baseline_data = readtable(sprintf("../output/sumstats/%s/baseline.csv", figures.model));
 
                 % Labels 
                 labels = data.Properties.VariableNames(8:end);
@@ -425,7 +427,8 @@ classdef figures
                     figures.prettify_compstats(relative_compstats, l, v1, v2, 1);
 
                     % Save
-                    saveas(gcf, sprintf("../output/compstats/%s/diff_%s.png", policy, labels{l}));
+                    mkdir(sprintf("../output/compstats/%s/%s/", figures.model, policy))
+                    saveas(gcf, sprintf("../output/compstats/%s/%s/diff_%s.png", figures.model, policy, labels{l}));
                     close;
                 end
             end
