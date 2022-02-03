@@ -29,15 +29,16 @@ game = init.model(alpha=alpha, sigma=sigma, policy="baseline")
 
 # Test
 model = "privacy"
-a = 0.5
+a = 0.9
 g = 0.0
-s = 5
+s = 9
 p0 = 1.5
+
 # 3
 game = init.model(alpha=a, gamma=g, sigma=s, policy="baseline", modelname=model, p0=p0)
 @time game = solve.solve_game(game)
 
-game = init.model(alpha=a, sigma=s, policy="limitedbundling", modelname=model, p0=p0)
+game = init.model(alpha=a, sigma=s, policy="nomergers", modelname=model, p0=p0)
 @time game = solve.solve_game(game)
 
 game = init.model(alpha=a, sigma=s, policy="nopredexitpricing", modelname=model, p0=p0)

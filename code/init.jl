@@ -16,7 +16,7 @@ Base.@kwdef mutable struct model
     c::Float64 = 1.0                            # Marginal cost
     gamma::Float64 = 0.0                        # Complementarity parameter
     sigma::Float64 = 5.0                        # Competition parameter
-    p0::Float64 = 1.5                           # Value of data
+    p0::Float64 = 1                             # Value of data
     accuracy::Float64 = 1e-8                    # Approximation accuracy
     cost_entry::Vector{Float64} = [0;10];       # Entry cost
     value_exit::Vector{Float64} = [0;1];        # Exit scrap values

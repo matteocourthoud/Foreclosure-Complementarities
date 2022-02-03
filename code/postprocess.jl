@@ -63,7 +63,7 @@ function compute_transitions(game)
     # CHECK: combine(groupby(df, :t), names(df, Not(:t)) .=> sum, renamecols=false)
 
     # Export
-    foldername = "data/transitions/$(game.modelname)/$(game.policy)/"
+    foldername = "output/transitions/$(game.modelname)/$(game.policy)/"
     mkpath(foldername)
     CSV.write("$foldername/$(game.filename).csv", df, append=false, header=true)
 end
@@ -110,7 +110,7 @@ function compute_timelines(game)
     end
 
     # Export
-    foldername = "data/timeseries/$(game.policy)/$(game.modelname)/"
+    foldername = "output/timeseries/$(game.policy)/$(game.modelname)/"
     mkpath(foldername)
     CSV.write("$foldername/$(game.filename).csv", df, append=false, header=true)
 end
@@ -234,7 +234,7 @@ end
 function compute_sumstats(model)
 
     # Import and save
-    filenames = get_all_files("data/games/$model", ".json")
+    filenames = get_all_files("output/games/$model", ".json")
     for filename in filenames
         print("\n\n", filename);
         game = init.import_game(filename)
@@ -242,7 +242,7 @@ function compute_sumstats(model)
         print("\n", sumstats[:,[7:8; 12:18]], "\n\n");
 
         # Save file
-        foldername = "data/sumstats/$model/"
+        foldername = "output/sumstats/$model/"
         mkpath(foldername)
         filename = "$(game.policy).csv"
         file_exists = filename in readdir(foldername)

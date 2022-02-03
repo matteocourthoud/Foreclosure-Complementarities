@@ -39,10 +39,18 @@ end
 
 """Load game"""
 function load_game(game)
-    filename = string(game.filename, ".json")
-    if string(filename) in readdir("output/games/")
-        print("\n\nGame ", game.filename, " already exists!")
+    filename = "data/games/$(game.modelname)/$(game.policy)/$(game.filename).json"
+    if isfile(filename)
+        print("\n\nGame $(game.filename) already exists!")
         game = init.import_game(filename)
+    else
+        # Initialize prices to best reply prices with zero value #TODO: compute_W
+        if game.modelname == "lbd"
+            game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
+        elseif game.modelname == "privacy"
+            game.P = game.db ./ 2
+            game.P = model_privacy.update_P_BR(game, model_privacy.compute_W(game, game.V));
+        end
     end
     return game
 end
@@ -76,19 +84,10 @@ end
 
 """Solve the dynamic game"""
 function solve_game(game)
-    # game = load_game(game)
-
-    # Initialize prices to best reply prices with zero value #TODO: compute_W
-    if game.modelname == "lbd"
-        game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
-    elseif game.modelname == "privacy"
-        game.P = game.db ./ 2
-        game.P = model_privacy.update_P_BR(game, model_privacy.compute_W(game, game.V));
-    end
-
+    game = load_game(game)
 
     # Solve game
-    print("\n\nSolving $(game.modelname) $(game.filename)\n----------------------\n");
+    print("\n\nSolving $(game.policy) $(game.filename)\n----------------------\n");
     dist = 1;
     iter = 0;
     while (dist>100*game.accuracy) && (iter<1000)
@@ -137,10 +136,10 @@ end
 
 """Solve the dynamic game"""
 function solve_game_predatory(game)
-    # game = load_game(game)
+    game = load_game(game)
 
     # Solve game
-    print("\n\nSolving $(game.modelname) $(game.filename)\n----------------------\n")
+    print("\n\nSolving $(game.policy) $(game.filename)\n----------------------\n")
 
     # Make indexes
     idx_nolearning = compute_idx_nolearning(game.S, game.smax)
@@ -148,15 +147,6 @@ function solve_game_predatory(game)
 
     # Initialize value without incentives
     V_noincentives = game.V
-
-    # Initialize prices to best reply prices with zero value #TODO: compute_W
-    if game.modelname == "lbd"
-        game.P = model_lbd.update_P_BR(game, model_lbd.compute_W(game, game.V));
-    elseif game.modelname == "privacy"
-        game.P = game.db ./ 2
-        game.P = model_privacy.update_P_BR(game, model_privacy.compute_W(game, game.V));
-    end
-
 
     # Iterate until convergence
     dist = 1
@@ -219,7 +209,7 @@ end
 function replicate(model::String, alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vector{String})
 
     # Delete all existing games and issues file
-    [rm(f) for f in postprocess.get_all_files("data/games/$model/", ".json")]
+    [rm(f) for f in postprocess.get_all_files("output/games/$model/", ".json")]
 
     # Loop over all policies and parameters
     for policy in policies
