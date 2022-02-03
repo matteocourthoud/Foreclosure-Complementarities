@@ -29,7 +29,7 @@ classdef figures
         matketnames = ["Monopoly in A&B","M Monopoly in A&B", "B Monopoly in A&B", ...
                     "mixed M/Dpoly", "M mixed M/Dpoly", "B mixed M/Dpoly", ...
                     "Duopoly in A&B","M/2 Duopoly in A&B","M Duopoly in A&B", "B/2 Duopoly in A&B","B Duopoly in A&B"];
-        filenames = ["a30g0s30", "a30g0s70", "a70g0s30", "a70g0s70"];
+        filenames = ["a80g0s80", "a30g0s70", "a70g0s30", "a70g0s70"];
         beta = 0.95;
         c = 1;
         gamma = 0;
@@ -277,7 +277,7 @@ classdef figures
                 for policy=figures.policies
 
                     % Import data
-                    filename = sprintf('../output/transitions/%s_%s', policy, file);
+                    filename = sprintf('../output/transitions/%s/%s/%s', figures.model, policy, file);
                     data = readtable(sprintf("%s.csv", filename));
 
                     %set(gca, 'OuterPosition', [-0.15,0,1.27,1.1])

@@ -5,6 +5,7 @@ Date: 08/06/2021
 =#
 
 include("code/solve.jl")
+include("code/figures.jl")
 
 # Parameters
 model = "privacy"
@@ -25,3 +26,6 @@ policies = ["baseline",
 
 # Replicate
 solve.replicate(model, alphas, gammas, sigmas, policies)
+
+# Make graphs
+figures.plot_compsats()

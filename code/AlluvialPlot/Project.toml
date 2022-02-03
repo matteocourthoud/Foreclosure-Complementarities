@@ -1,0 +1,4 @@
+name = "AlluvialPlot"
+uuid = "bdd255e7-38f1-48ae-a9b9-97995d94e78a"
+authors = ["matteocourthoud <matteo.courthoud@uzh.ch>"]
+version = "0.1.0"
