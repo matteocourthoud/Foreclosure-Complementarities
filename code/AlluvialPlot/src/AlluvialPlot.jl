@@ -17,7 +17,7 @@ Q: Vector
     Vector of matrices, dimension I (number of rows)
     Each matrix should be of dimension I x J
 """
-function alluvial(s0, Q; xlabels=nothing, ylabels=nothing, title=title)
+function alluvial(s0, Q, xlabels, ylabels; kwargs...)
 
     # Dimensions
     I = length(s0)
@@ -41,11 +41,12 @@ function alluvial(s0, Q; xlabels=nothing, ylabels=nothing, title=title)
     # Init plot
     colors = cgrad(:lajolla, I+2, categorical = true)[2:end-1]
     ypos = (ybars_top[:,1] + ybars_bottom[:,1])/2
-    p = plot(legend=false,
-             xticks=(1:I+1, xlabels),
+    p = plot(xticks=(1:I+1, xlabels),
              yticks=(ypos, ylabels),
              axis=false,
-             title=title)
+             legend=false,
+             grid=false;
+             kwargs...)
     # Setup
     L = 100
     c = (1 .- cos.(range(0, pi, length=L)))./2;

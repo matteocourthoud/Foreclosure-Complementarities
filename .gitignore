@@ -1,7 +1,7 @@
 *.m~
 *.DS_Store
+*.sh
 backup
-figures
-data
+output
 paper
-input/test.jl
+code/test.jl

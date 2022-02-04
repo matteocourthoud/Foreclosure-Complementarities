@@ -26,6 +26,7 @@ const policies = [
     "nopredentrybundling",
 ]
 
+# Column names
 const colnames = [
     "margin",
     "bcost",
@@ -44,7 +45,8 @@ const colnames = [
     "welfareLR",
 ]
 
-const varnames = [
+# Corresponding labels
+const collabels = [
     "Price - Cost (short run)",
     "Below Cost Pricing (short run)",
     "Entry Probability (short run)",
@@ -62,7 +64,7 @@ const varnames = [
     "Total Welfare (long run)",
 ]
 
-const matketnames = [
+const marketnames = [
     "Monopoly in A&B",
     "M Monopoly in A&B",
     "B Monopoly in A&B",
@@ -76,32 +78,59 @@ const matketnames = [
     "B Duopoly in A&B",
 ]
 
-const filenames = ["a80g0s80", "a30g0s70", "a70g0s30", "a70g0s70"]
+"""Get ylabels"""
+function get_ylabels(policy)
+    if policy=="nomergers"
+        return figures.marketnames[1:3]
+    elseif policy=="nobundling"
+        return figures.marketnames[1:7]
+    else
+        return figures.marketnames
+    end
+end
 
-"""Make alluvial plots"""
-function plot_alluvial()
-    # Input
-    ylabels = ("state 1", "state 2", "state 3")
-    xlabels = ("time 1", "time 2", "time 3", "time 4")
-    s0 = [0.1, 0.2, 0.7]
-    Q = [i ./ sum(i, dims = 2) for i in [rand(3, 3) for j = 1:3]]
+"""Make all alluvial plots"""
+function plot_alluvial(filenames)
 
-    # Alluvial plot
-    p = AlluvialPlot.alluvial(
-        s0,
-        Q,
-        xlabels = xlabels,
-        ylabels = ylabels,
-        title = "Test 1",
-    )
+    # Loop over policies and files
+    for filename in filenames
+        for policy in figures.policies
+
+            # Import data
+            df = DataFrame(CSV.File("output/transitions/$(figures.model)/$policy/$filename.csv"))
+            xlabels = ["t=$t" for t in Int.([0; unique(df.t)])]
+            ylabels = get_ylabels(policy)
+            s0 = ones(length(ylabels)) ./ length(ylabels)
+            Q = [Matrix(df[df.t.==1, 4:end]) for t in unique(df.t)]
+
+            # Alluvial plot
+            p = AlluvialPlot.alluvial(
+                s0,
+                Q,
+                xlabels,
+                ylabels,
+                title = "State to State Transitions",
+                dpi = 300,
+                ytickfontsize = 6,
+                xtickfontsize = 6,
+            )
+
+            # Save plot
+            mkpath("output/alluvial/$(figures.model)/")
+            png(p, "output/alluvial/$(figures.model)/$(policy)_$filename.png")
+        end
+    end
 
 end
 
+
+
+
 """Make comparative statics plots"""
 function get_stats(df, alphas, sigmas, col)
-    v = zeros(length(alphas), length(sigmas))
-    for (i, a) in enumerate(alphas)
-        for (j, s) in enumerate(sigmas)
+    v = zeros(length(sigmas), length(alphas))
+    for (i, s) in enumerate(sigmas)
+        for (j, a) in enumerate(alphas)
             v[i, j] = df[
                 (df.alpha.==a).&
                 (df.beta.==0.95).&
@@ -117,22 +146,23 @@ function get_stats(df, alphas, sigmas, col)
 end
 
 """Plot heatmap"""
-function make_heatmap(sumstats, alphas, sigmas, i)
+function make_heatmap(sumstats, alphas, sigmas, figtitle)
     # Plot Heatmap
     m = max(abs.(sumstats)...)
     p = contourf(
         sumstats,
-        c = :balance,
-        levels = 10,
+        c = reverse(cgrad(:RdBu_11)),
+        levels = 14,
         linewidth = 0,
         size = (550, 500),
-        title = figures.varnames[i],
-        xlabel = "Product Differentiation, σ",
-        xticks = (2:2:length(sigmas), sigmas[2:2:end]),
-        ylabel = "Economies of Scale, α",
-        yticks = (2:2:length(alphas), alphas[2:2:end]),
+        title = figtitle,
+        xlabel = "Economies of Scale, α",
+        xticks = (2:2:length(alphas), alphas[2:2:end]),
+        ylabel = "Product Differentiation, σ",
+        yticks = (2:2:length(sigmas), sigmas[2:2:end]),
         clims = (-m - 0.1, m + 0.1),
-        dpi = 300,
+        dpi = 200,
+        framestyle = :box,
     )
 end
 
@@ -152,7 +182,8 @@ function plot_compsats()
             sumstats = get_stats(df, alphas, sigmas, col)
 
             # Plot baseline
-            p = make_heatmap(sumstats, alphas, sigmas, i)
+            figtitle = figures.collabels[i]
+            p = make_heatmap(sumstats, alphas, sigmas, figtitle)
             mkpath("output/compstats/$(figures.model)/$policy/")
             png(p, "output/compstats/$(figures.model)/$policy/$col.png")
 
@@ -163,7 +194,10 @@ function plot_compsats()
                 )
                 baseline = get_stats(df, alphas, sigmas, col)
                 rel_sumstats = sumstats - baseline
-                p = make_heatmap(rel_sumstats, alphas, sigmas, i)
+
+                # Plot relative state
+                figtitle = "Δ $(figures.collabels[i])"
+                p = make_heatmap(rel_sumstats, alphas, sigmas, figtitle)
                 png(p, "output/compstats/$(figures.model)/$policy/diff_$col.png")
             end
 

@@ -1,4 +1,4 @@
-#=``
+#=
 Foreclosure Complementarities
 By: Matteo Courthoud
 Date: 08/06/2021
@@ -29,3 +29,4 @@ solve.replicate(model, alphas, gammas, sigmas, policies)
 
 # Make graphs
 figures.plot_compsats()
+figures.plot_alluvial(("a80g0s80",))

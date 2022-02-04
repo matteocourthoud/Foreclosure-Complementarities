@@ -209,6 +209,9 @@ end
 function replicate(model::String, alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vector{String})
 
     # Delete all existing games and issues file
+    print("Are you sure you want to clean all files and restart? [y/n]")
+    readline()=="y" ? print("Ok, proceeding...") : return
+    rm
     [rm(f) for f in postprocess.get_all_files("output/games/$model/", ".json")]
 
     # Loop over all policies and parameters
