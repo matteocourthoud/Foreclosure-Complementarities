@@ -29,19 +29,17 @@ game = init.model(alpha=alpha, sigma=sigma, policy="baseline")
 
 # Test
 model = "privacy"
-a = 0.9
+a = 0.8
 g = 0.0
 s = 9
-p0 = 1.5
+p0 = 1
 
-# 3
+# baseline
 game = init.model(alpha=a, gamma=g, sigma=s, policy="baseline", modelname=model, p0=p0)
 @time game = solve.solve_game(game)
 
-game = init.model(alpha=a, sigma=s, policy="nomergers", modelname=model, p0=p0)
+# nobundling
+game = init.model(alpha=a, gamma=g, sigma=s, policy="nobundling", modelname=model, p0=p0)
 @time game = solve.solve_game(game)
-
-game = init.model(alpha=a, sigma=s, policy="nopredexitpricing", modelname=model, p0=p0)
-@time game = solve.solve_game_predatory(game)
 
 postprocess.compute_sumstats(model);

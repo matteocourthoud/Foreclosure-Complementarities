@@ -22,17 +22,16 @@ function export_game(game, dist::Float64, iter::Int)
     # If there were issues, save it
     if (dist>100*game.accuracy)
         open("issues.txt","a") do io
-           println(io, string(game.filename, " : dist=", dist))
+           println(io, "$(game.policy) $(game.filename): dist=$dist")
         end
     elseif (max(game.Q[:,end]...)>0.9)
         row = argmax(game.Q[:,end])
         open("issues.txt","a") do io
-           println(io, string(game.filename, " : state=", game.S[row, :],
-           " prices=", round.(game.P[row, :],digits=1)))
+           println(io, "$(game.policy) $(game.filename): state=$(game.S[row, :]),  prices=$(round.(game.P[row, :],digits=1))")
         end
     elseif (iter>400)
         open("issues.txt","a") do io
-           println(io, string(game.filename, " : iter=", iter))
+           println(io, "$(game.policy) $(game.filename): iter=$iter")
         end
     end
 end
@@ -211,7 +210,7 @@ function replicate(model::String, alphas::Vector, gammas::Vector, sigmas::Vector
     # Delete all existing games and issues file
     print("Are you sure you want to clean all files and restart? [y/n]")
     readline()=="y" ? print("Ok, proceeding...") : return
-    rm
+    rm("issues.txt")
     [rm(f) for f in postprocess.get_all_files("output/games/$model/", ".json")]
 
     # Loop over all policies and parameters
