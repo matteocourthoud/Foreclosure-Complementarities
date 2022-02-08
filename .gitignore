@@ -2,6 +2,7 @@
 *.DS_Store
 *.sh
 backup
+data
 output
 paper
 code/test.jl

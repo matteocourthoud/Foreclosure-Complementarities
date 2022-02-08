@@ -204,13 +204,13 @@ function solve_game_predatory(game)
     return game
 end
 
-"""Replicate alll results"""
+"""Replicate all results"""
 function replicate(model::String, alphas::Vector, gammas::Vector, sigmas::Vector, policies::Vector{String})
 
     # Delete all existing games and issues file
     print("Are you sure you want to clean all files and restart? [y/n]")
     readline()=="y" ? print("Ok, proceeding...") : return
-    rm("issues.txt")
+    isfile("issues.txt") ? rm("issues.txt") : print("\nissues.txt does not exist...")
     [rm(f) for f in postprocess.get_all_files("output/games/$model/", ".json")]
 
     # Loop over all policies and parameters
